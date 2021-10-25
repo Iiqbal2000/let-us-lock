@@ -9,7 +9,7 @@ import (
 	"github.com/Iiqbal2000/let-us-lock/pkg/decryption"
 	"github.com/Iiqbal2000/let-us-lock/pkg/encryption"
 	fs "github.com/Iiqbal2000/let-us-lock/pkg/filesystem"
-  salt "github.com/Iiqbal2000/let-us-lock/pkg/randomSalt"
+  salt "github.com/Iiqbal2000/let-us-lock/pkg/saltGenerator"
 	"golang.org/x/crypto/scrypt"
 )
 
