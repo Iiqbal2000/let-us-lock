@@ -1,4 +1,4 @@
-package encryption
+package aes
 
 import (
 	"crypto/aes"
@@ -8,7 +8,7 @@ import (
 )
 
 // Algoritme AES mengubah blok plaintext 128-bit menjadi blok ciphertext berukuran 128 bit.
-func EncryptAes(plainData, key []byte) ([]byte, error) {
+func Encrypt(plainData, key []byte) ([]byte, error) {
 	// create cipher block
   block, err := aes.NewCipher(key)
   if err != nil { 
@@ -36,4 +36,28 @@ func EncryptAes(plainData, key []byte) ([]byte, error) {
   )
   
   return cipherData, nil
+}
+
+func Decrypt(cipherData, key []byte) ([]byte, error) {
+  block, err := aes.NewCipher(key)
+  if err != nil { 
+    return nil, err
+  }
+
+  gcm, err := cipher.NewGCM(block)
+  if err != nil { 
+    return nil, err
+  }
+
+  // get nonce
+  nonceSize := gcm.NonceSize()
+  nonce, cipherText := cipherData[:nonceSize], cipherData[nonceSize:]
+
+  // decrypt
+  plainData, err := gcm.Open(nil, nonce, cipherText, nil)
+  
+  if err != nil { 
+    return nil, err
+  }
+  return plainData, nil
 }

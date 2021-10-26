@@ -3,13 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"strings"
-  "log"
 
-	"github.com/Iiqbal2000/let-us-lock/pkg/decryption"
-	"github.com/Iiqbal2000/let-us-lock/pkg/encryption"
+	"github.com/Iiqbal2000/let-us-lock/pkg/aes"
 	fs "github.com/Iiqbal2000/let-us-lock/pkg/filesystem"
-  salt "github.com/Iiqbal2000/let-us-lock/pkg/saltGenerator"
+	"github.com/Iiqbal2000/let-us-lock/pkg/randstr"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -35,7 +34,7 @@ func main() {
   fmt.Scanf("%s", &passphrase)
   
   // generate key from passphrase using scrypt
-	key, err := scrypt.Key([]byte(passphrase), salt.ReadSalt(saltPath), N, r, p, keyLen)
+	key, err := scrypt.Key([]byte(passphrase), randstr.Read(saltPath), N, r, p, keyLen)
   if err != nil {
     log.Fatal(err.Error())
   }
@@ -47,14 +46,14 @@ func main() {
   }
   
   if inputMode := strings.ToLower(*mode); inputMode == "encrypt" {
-    cipherData, err := encryption.EncryptAes(data, key)
+    cipherData, err := aes.Encrypt(data, key)
     if err != nil {
       log.Fatal(err.Error())
     }
     fs.WriteFile(cipherData, *output)
 
   } else if inputMode == "decrypt" {
-    plainData, err := decryption.DecryptAes(data, key)
+    plainData, err := aes.Decrypt(data, key)
     if err != nil {
       log.Fatal(err.Error())
     }

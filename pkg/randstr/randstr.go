@@ -1,4 +1,4 @@
-package saltgenerator
+package randstr
 
 import (
 	"math/rand"
@@ -7,7 +7,7 @@ import (
 	fs "github.com/Iiqbal2000/let-us-lock/pkg/filesystem"
 )
 
-func GenerateSalt(size int) []byte  {
+func Generate(size int) []byte  {
 	var salt []byte
   // ASCII range
 	min := 32
@@ -21,11 +21,11 @@ func GenerateSalt(size int) []byte  {
 	return salt
 }
 
-func ReadSalt(saltPath string) []byte {
+func Read(saltPath string) []byte {
 	data, _ := fs.ReadFile(saltPath);
 	if data == nil {
     rand.Seed(time.Now().UnixNano())
-    salt := GenerateSalt(50)
+    salt := Generate(50)
     fs.WriteFile(salt, saltPath)
   }
 
