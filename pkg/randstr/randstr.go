@@ -3,6 +3,7 @@ package randstr
 import (
 	"math/rand"
   "time"
+	"os"
 
 	fs "github.com/Iiqbal2000/let-us-lock/pkg/filesystem"
 )
@@ -21,14 +22,15 @@ func Generate(size int) []byte  {
 	return salt
 }
 
-func Read(saltPath string) []byte {
-	data, _ := fs.ReadFile(saltPath);
-	if data == nil {
-    rand.Seed(time.Now().UnixNano())
-    salt := Generate(50)
-    fs.WriteFile(salt, saltPath)
-  }
+func Read(path string) []byte {
+	if _, err := os.Stat(path); err != nil {
+		rand.Seed(time.Now().UnixNano())
+    	salt := Generate(50)
+    	fs.WriteFile(salt, path)
+	}
 
+	data, _ := fs.ReadFile(path);
+	
 	return data
 }
 
