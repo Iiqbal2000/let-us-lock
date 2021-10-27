@@ -6,7 +6,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 
@@ -26,14 +25,15 @@ const (
 
 func main() {
   if err := run(os.Args, os.Stdin); err != nil {
-		log.Fatalln(err)
-	}
+		fmt.Println(err.Error())
+    os.Exit(1)
+  }
 }
 
 func run(args []string, stdIn io.Reader) error {
   
   if len(args) < 2 {
-    return errors.New("expected 'encrypt' or 'decrypt' subcommands")
+    return errors.New("you have to include 'encrypt' or 'decrypt' command")
   }
 
   var (
@@ -58,7 +58,7 @@ func run(args []string, stdIn io.Reader) error {
         return err
       }
     default:
-      return errors.New("expected 'encrypt' or 'decrypt' subcommands")
+      return errors.New("you have to include 'encrypt' or 'decrypt' command")
   }
 
   // get passphrase input
