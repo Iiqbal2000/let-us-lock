@@ -57,46 +57,50 @@ func TestRun(t *testing.T) {
 	
 	for _, val := range runTestCase {
 		stdin.Write(key)
-		err := run(val.cmd, &stdin)
-		
+		err := run(val.cmd, &stdin)		
 		if val.name == "encrypt" && !val.err {
-			if fileInfo, err := os.Stat(val.expectFile[0]); err != nil {
-				t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[0])
-			}		
-			if fileInfo, err := os.Stat(val.expectFile[1]); err != nil {
-				t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[1])
-			}
+			t.Run(val.name, func(t *testing.T) {
+				if fileInfo, err := os.Stat(val.expectFile[0]); err != nil {
+					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[0])
+				}		
+				if fileInfo, err := os.Stat(val.expectFile[1]); err != nil {
+					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[1])
+				}
+			})
 		} else if val.name == "decrypt" && !val.err {
-			if fileInfo, err := os.Stat(val.expectFile[1]); err != nil {
-				t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[1])
-			}
+			t.Run(val.name, func(t *testing.T) {
+				if fileInfo, err := os.Stat(val.expectFile[1]); err != nil {
+					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[1])
+				}
 
-			func() {
-				defer func() {
-					if err := os.Remove("salt.txt"); err != nil {
-						t.Fatal(err)
-					}
-					if err := os.Remove("cipherfile"); err != nil {
-						t.Fatal(err)
-					}
-					if err := os.Remove("result.png"); err != nil {
-						t.Fatal(err)
-					}
+				func() {
+					defer func() {
+						if err := os.Remove("salt.txt"); err != nil {
+							t.Fatal(err)
+						}
+						if err := os.Remove("cipherfile"); err != nil {
+							t.Fatal(err)
+						}
+						if err := os.Remove("result.png"); err != nil {
+							t.Fatal(err)
+						}
+					}()
 				}()
-			}()
-
+			})
 		} else {
-			if err == nil {
-				t.Fatal("an error is not found")
-			}
-
-			if fileInfo, err := os.Stat(val.expectFile[0]); err == nil {
-				t.Fatalf("Got %s, expected: %s", fileInfo.Name(), "no file")
-			}
-
-			if fileInfo, err := os.Stat(val.expectFile[1]); err == nil {
-				t.Fatalf("Got %s, expected: %s", fileInfo.Name(), "no file")
-			}
+			t.Run(val.name, func(t *testing.T) {
+				if err == nil {
+					t.Fatal("an error is not found")
+				}
+	
+				if fileInfo, err := os.Stat(val.expectFile[0]); err == nil {
+					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), "no file")
+				}
+	
+				if fileInfo, err := os.Stat(val.expectFile[1]); err == nil {
+					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), "no file")
+				}
+			})
 		}
 	}
 
