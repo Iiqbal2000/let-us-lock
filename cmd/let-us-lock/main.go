@@ -4,14 +4,13 @@ import (
 	"bufio"
 	"errors"
 	"flag"
-	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"github.com/Iiqbal2000/let-us-lock/pkg/aes"
-	fs "github.com/Iiqbal2000/let-us-lock/pkg/filesystem"
-	"github.com/Iiqbal2000/let-us-lock/pkg/randstr"
+	"github.com/Iiqbal2000/let-us-lock/aes"
+	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
+	"github.com/Iiqbal2000/let-us-lock/randstr"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -25,8 +24,9 @@ const (
 
 func main() {
   if err := run(os.Args, os.Stdin); err != nil {
-		fmt.Println(err.Error())
-    os.Exit(1)
+    io.WriteString(os.Stderr, err.Error())
+    io.WriteString(os.Stderr, "\n")
+    os.Exit(2)
   }
 }
 
@@ -62,7 +62,7 @@ func run(args []string, stdIn io.Reader) error {
   }
 
   // get passphrase input
-  fmt.Print("Enter your password (minimal 8 characters): ")
+  io.WriteString(os.Stdout, "Enter your password (minimal 8 characters): ")
   buff := bufio.NewReader(stdIn)
   // ReadString will block until the delimiter is entered
 	strBuff, err := buff.ReadString('\n')

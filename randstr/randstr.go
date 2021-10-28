@@ -5,7 +5,7 @@ import (
   "time"
 	"os"
 
-	fs "github.com/Iiqbal2000/let-us-lock/pkg/filesystem"
+	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
 )
 
 func Generate(size int) []byte  {
