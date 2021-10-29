@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	fs "github.com/Iiqbal2000/let-us-lock/pkg/filesystem"
+	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
 )
 
 func TestReadFile(t *testing.T) {

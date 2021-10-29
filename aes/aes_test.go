@@ -4,7 +4,7 @@ import (
 	"testing"
 	"bytes"
 
-	"github.com/Iiqbal2000/let-us-lock/pkg/aes"
+	"github.com/Iiqbal2000/let-us-lock/aes"
 )
 
 var aesTestCase = struct {
