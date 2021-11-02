@@ -7,15 +7,20 @@ import (
 	"io"
 )
 
-// Algoritme AES mengubah blok plaintext 128-bit menjadi blok ciphertext berukuran 128 bit.
-func Encrypt(plainData, key []byte) ([]byte, error) {
-	// create cipher block
+func createBlock(key []byte) (cipher.AEAD, error) {
+  // create cipher block
   block, err := aes.NewCipher(key)
   if err != nil { 
     return nil, err
   }
   
-  gcm, err := cipher.NewGCM(block)
+  return cipher.NewGCM(block)
+}
+
+// Algoritme AES mengubah blok plaintext 128-bit menjadi blok ciphertext berukuran 128 bit.
+func Encrypt(plainData, key []byte) ([]byte, error) {
+	// create cipher block
+  gcm, err := createBlock(key)
   if err != nil { 
     return nil, err
   }
@@ -39,12 +44,7 @@ func Encrypt(plainData, key []byte) ([]byte, error) {
 }
 
 func Decrypt(cipherData, key []byte) ([]byte, error) {
-  block, err := aes.NewCipher(key)
-  if err != nil { 
-    return nil, err
-  }
-
-  gcm, err := cipher.NewGCM(block)
+  gcm, err := createBlock(key)
   if err != nil { 
     return nil, err
   }
