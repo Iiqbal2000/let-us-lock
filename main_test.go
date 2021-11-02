@@ -90,7 +90,7 @@ func TestRun(t *testing.T) {
 		} else {
 			t.Run(val.name, func(t *testing.T) {
 				if err == nil {
-					t.Fatal("an error is not found")
+					t.Fatal("An error has to appear, but it doesn't")
 				}
 	
 				if fileInfo, err := os.Stat(val.expectFile[0]); err == nil {
