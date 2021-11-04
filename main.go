@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 
-	"github.com/Iiqbal2000/let-us-lock/aes"
+	"github.com/Iiqbal2000/let-us-lock/crypt"
 	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
 	"github.com/Iiqbal2000/let-us-lock/randstr"
 	"golang.org/x/crypto/scrypt"
@@ -30,6 +31,10 @@ func main() {
   }
 }
 
+func setCmd(name string) *flag.FlagSet {
+  return flag.NewFlagSet(name, flag.ExitOnError)
+}
+
 func run(args []string, stdIn io.Reader) error {
   
   if len(args) < 2 {
@@ -42,19 +47,14 @@ func run(args []string, stdIn io.Reader) error {
     output *string
   )
 
-  switch strings.ToLower(args[1]) {
-    case "encrypt":
-      encryptCmd := flag.NewFlagSet("encrypt", flag.ExitOnError)
-      file = encryptCmd.String("f", "", "your file path which you want to encrypt/decrypt")
-      output = encryptCmd.String("o", "cipherfile", "your file output name")
-      if err := encryptCmd.Parse(args[2:]); err != nil {
-        return err
-      }
-    case "decrypt":
-      decryptCmd := flag.NewFlagSet("decrypt", flag.ExitOnError)
-      file = decryptCmd.String("f", "", "your file path which you want to encrypt/decrypt")
-      output = decryptCmd.String("o", "result", "your file output name")
-      if err := decryptCmd.Parse(args[2:]); err != nil {
+  inputCmd := strings.ToLower(args[1])
+
+  switch inputCmd {
+    case "encrypt", "decrypt":
+      flagSet := setCmd(inputCmd)
+      file = flagSet.String("f", "", "your file path which you want to encrypt/decrypt")
+      output = flagSet.String("o", fmt.Sprintf("%s-result", inputCmd), "your file output name")
+      if err := flagSet.Parse(args[2:]); err != nil {
         return err
       }
     default:
@@ -84,21 +84,19 @@ func run(args []string, stdIn io.Reader) error {
     return errors.New("the passphrase is not match")
   }
 
-  switch strings.ToLower(args[1]) {
+  switch inputCmd {
     case "encrypt":
-      cipherData, err := aes.Encrypt(fileContent, key)
+      cipherData, err := crypt.Encrypt(fileContent, key)
       if err != nil {
         return errors.New(err.Error())
       }
       fs.WriteFile(cipherData, *output)
     case "decrypt":
-      plainData, err := aes.Decrypt(fileContent, key)
+      plainData, err := crypt.Decrypt(fileContent, key)
       if err != nil {
         return errors.New(err.Error())
       }
       fs.WriteFile(plainData, *output)
-    default:
-      return errors.New("command are required")
   }
   
   return nil
