@@ -1,10 +1,10 @@
-package aes_test
+package crypt_test
 
 import (
 	"testing"
 	"bytes"
 
-	"github.com/Iiqbal2000/let-us-lock/aes"
+	"github.com/Iiqbal2000/let-us-lock/crypt"
 )
 
 var aesTestCase = struct {
@@ -16,7 +16,7 @@ var aesTestCase = struct {
 }
 
 func TestEncrypt(t *testing.T) {
-	result, err := aes.Encrypt([]byte(aesTestCase.plainText), []byte(aesTestCase.key))
+	result, err := crypt.Encrypt([]byte(aesTestCase.plainText), []byte(aesTestCase.key))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -28,12 +28,12 @@ func TestEncrypt(t *testing.T) {
 
 func TestDecrypt(t *testing.T) {
 	
-	cipherText, err := aes.Encrypt([]byte(aesTestCase.plainText), []byte(aesTestCase.key))
+	cipherText, err := crypt.Encrypt([]byte(aesTestCase.plainText), []byte(aesTestCase.key))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	result, err := aes.Decrypt(cipherText, []byte(aesTestCase.key))
+	result, err := crypt.Decrypt(cipherText, []byte(aesTestCase.key))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
