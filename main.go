@@ -77,9 +77,22 @@ func run(args []string, stdIn io.Reader) error {
   if err != nil {
     return errors.New("the file is not found")
   }
+
+  // check salt
+  var salt []byte
+  if _, err := os.Stat(saltPath); err != nil {
+    salt = randstr.Generate(50)
+    fs.WriteFile(salt, saltPath)
+  } else {
+    salt, err = fs.ReadFile(saltPath)
+    if err != nil {
+      return errors.New("failure when read salt file")
+    }
+  }
+
   
   // generate key from passphrase using scrypt
-	key, err := scrypt.Key([]byte(passphrase), randstr.GenerateAndSave(50, saltPath), N, r, p, keyLen)
+	key, err := scrypt.Key([]byte(passphrase), salt, N, r, p, keyLen)
   if err != nil {
     return errors.New("the passphrase is not match")
   }
