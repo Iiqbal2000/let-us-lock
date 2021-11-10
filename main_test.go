@@ -8,69 +8,70 @@ import (
 
 var key = []byte("passphrasetesti\n")
 
-var runTestCase = []struct{
+var testSuccessCase = []struct{
 	name string
 	cmd []string
 	expectFile []string
-	err bool
 } {
 		{
 			name: "encrypt",
 			cmd: []string{"main.go", "encrypt", "-f", "kitten.png", "-o", "cipherfile"},
 			expectFile: []string{"salt.txt", "cipherfile"},
-			err: false,
 		},
 		{	
 			name: "decrypt",
 			cmd: []string{"main.go", "decrypt", "-f", "cipherfile", "-o", "result.png"},
 			expectFile: []string{"salt.txt", "result.png"},
-			err: false,
-		},
-		{
-			name: "error",
-			cmd: []string{"main.go", "ksiwn", "-f", "kitten.png", "-o", "cipherfile"},
-			expectFile: []string{"salt.txt", "cipherfile"},
-			err: true,
-		},
-		{
-			name: "error",
-			cmd: []string{"main.go", "encrypt"},
-			expectFile: []string{"salt.txt", "cipherfile"},
-			err: true,
-		},
-		{
-			name: "error",
-			cmd: []string{"main.go", "-f", "kitten.png", "-o", "cipherfile"},
-			expectFile: []string{"salt.txt", "cipherfile"},
-			err: true,
-		},
-		{
-			name: "error",
-			cmd: []string{"main.go", "encrypt", "-o", "cipherfile"},
-			expectFile: []string{"salt.txt", "cipherfile"},
-			err: true,
 		},
 }
 
-func TestRun(t *testing.T) {
+var testFailureCase = []struct{
+	name string
+	cmd []string
+	file []string
+} {
+	{
+		name: "error",
+		cmd: []string{"main.go", "ksiwn", "-f", "kitten.png", "-o", "cipherfile"},
+		file: []string{"salt.txt", "cipherfile"},
+	},
+	{
+		name: "error",
+		cmd: []string{"main.go", "encrypt"},
+		file: []string{"salt.txt", "cipherfile"},
+	},
+	{
+		name: "error",
+		cmd: []string{"main.go", "-f", "kitten.png", "-o", "cipherfile"},
+		file: []string{"salt.txt", "cipherfile"},
+	},
+	{
+		name: "error",
+		cmd: []string{"main.go", "encrypt", "-o", "cipherfile"},
+		file: []string{"salt.txt", "cipherfile"},
+	},
+}
+
+func TestEncryptAndDecrypt(t *testing.T) {
 	var stdin bytes.Buffer
 	
-	for _, val := range runTestCase {
+	for _, val := range testSuccessCase {
 		stdin.Write(key)
-		err := run(val.cmd, &stdin)		
-		if val.name == "encrypt" && !val.err {
+		run(val.cmd, &stdin)
+
+		if val.name == "encrypt" {
 			t.Run(val.name, func(t *testing.T) {
-				if fileInfo, err := os.Stat(val.expectFile[0]); err != nil {
-					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[0])
+				if _, err := os.Stat(val.expectFile[0]); err != nil {
+					t.Fatalf("Got error %s file is not found. stack : %s", val.expectFile[0], err)
 				}		
-				if fileInfo, err := os.Stat(val.expectFile[1]); err != nil {
-					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[1])
+				if _, err := os.Stat(val.expectFile[1]); err != nil {
+					t.Fatalf("Got error %s file is not found. stack : %s", val.expectFile[1], err)
 				}
 			})
-		} else if val.name == "decrypt" && !val.err {
+		} else if val.name == "decrypt" {
 			t.Run(val.name, func(t *testing.T) {
-				if fileInfo, err := os.Stat(val.expectFile[1]); err != nil {
-					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), val.expectFile[1])
+				if _, err := os.Stat(val.expectFile[1]); err != nil {
+					t.Fatalf("Got error %s file is not found. stack : %s", val.expectFile[1], err)
 				}
 
 				func() {
@@ -87,21 +88,29 @@ func TestRun(t *testing.T) {
 					}()
 				}()
 			})
-		} else {
-			t.Run(val.name, func(t *testing.T) {
-				if err == nil {
-					t.Fatal("An error has to appear, but it doesn't")
-				}
-	
-				if fileInfo, err := os.Stat(val.expectFile[0]); err == nil {
-					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), "no file")
-				}
-	
-				if fileInfo, err := os.Stat(val.expectFile[1]); err == nil {
-					t.Fatalf("Got %s, expected: %s", fileInfo.Name(), "no file")
-				}
-			})
 		}
 	}
 
+}
+
+func TestEncryptAndDecryptFailure(t *testing.T) {
+	var stdin bytes.Buffer
+
+	for _, elem := range testFailureCase {
+		stdin.Write(key)
+		err := run(elem.cmd, &stdin)
+		t.Run(elem.name, func(t *testing.T) {
+			if err == nil {
+				t.Fatal("error should appear, but it didn't")
+			}
+
+			if _, err := os.Stat(elem.file[0]); err == nil {
+				t.Fatalf("Got error %s file is found. stack : %s", elem.file[0], err)
+			}
+
+			if _, err := os.Stat(elem.file[1]); err == nil {
+				t.Fatalf("Got error %s file is found. stack : %s", elem.file[1], err)
+			}
+		})
+	}
 }
