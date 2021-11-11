@@ -13,17 +13,20 @@ func Generate(size int) []byte  {
 	max := 127
 
 	var wg sync.WaitGroup
-	
-	rand.Seed(time.Now().UnixNano())
-	wg.Add(1)
+	var mtx sync.Mutex
 
-	go func(n int)	{
-		for i := 0; i < n; i++ {
+	rand.Seed(time.Now().UnixNano())
+	
+	for i := 0; i < size; i++ {
+		wg.Add(1)
+		go func() {
+			mtx.Lock()
 			random := rand.Intn(max - min + 1) + min
 			salt = append(salt, byte(random))
-		}
-		wg.Done()
-	}(size)
+			mtx.Unlock()
+			wg.Done()
+		}()
+	}
 	
 	wg.Wait()
 	
