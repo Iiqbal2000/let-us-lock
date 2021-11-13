@@ -50,6 +50,11 @@ var testFailureCase = []struct{
 		cmd: []string{"main.go", "encrypt", "-o", "cipherfile"},
 		file: []string{"salt.txt", "cipherfile"},
 	},
+	{
+		name: "error",
+		cmd: []string{"main.go", "encrypt", "decrypt", "-f", "kitten.png", "-o", "cipherfile"},
+		file: []string{"salt.txt", "cipherfile"},
+	},
 }
 
 func TestEncryptAndDecrypt(t *testing.T) {

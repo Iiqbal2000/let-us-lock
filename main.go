@@ -15,12 +15,14 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
+// parameters for scrypt algorithm except for aesKeyLen and saltPath variables
+// https://en.wikipedia.org/wiki/Scrypt
 const (
-  N int                 = 32768 // cpu cost
-  r int                 = 8 // memory cost
-  p int                 = 1 // parallelization
-  keyLen int            = 32 // byte key length for AES-256
-  saltPath string       = "salt.txt"
+  costFactor int                      = 32768
+  blockSizeFactor int                 = 8
+  parallelFactor int                  = 1
+  aesKeyLen int                       = 32
+  saltPath string                     = "salt.txt"
 )
 
 func main() {
@@ -48,17 +50,15 @@ func run(args []string, stdIn io.Reader) error {
   )
 
   inputCmd := strings.ToLower(args[1])
+  if inputCmd != "encrypt" && inputCmd != "decrypt" {
+    return errors.New("you have to include 'encrypt' or 'decrypt' command")
+  }
 
-  switch inputCmd {
-    case "encrypt", "decrypt":
-      flagSet := setCmd(inputCmd)
-      file = flagSet.String("f", "", "your file path which you want to encrypt/decrypt")
-      output = flagSet.String("o", fmt.Sprintf("%s-result", inputCmd), "your file output name")
-      if err := flagSet.Parse(args[2:]); err != nil {
-        return err
-      }
-    default:
-      return errors.New("you have to include 'encrypt' or 'decrypt' command")
+  flagSet := setCmd(inputCmd)
+  file = flagSet.String("f", "", "your file path which you want to encrypt/decrypt")
+  output = flagSet.String("o", fmt.Sprintf("%s-result", inputCmd), "your file output name")
+  if err := flagSet.Parse(args[2:]); err != nil {
+    return err
   }
 
   // get passphrase input
@@ -78,7 +78,7 @@ func run(args []string, stdIn io.Reader) error {
     return errors.New("the file is not found")
   }
 
-  // check salt
+  // generate salt
   var salt []byte
   if _, err := os.Stat(saltPath); err != nil {
     salt = randstr.Generate(50)
@@ -90,27 +90,23 @@ func run(args []string, stdIn io.Reader) error {
     }
   }
 
-  
   // generate key from passphrase using scrypt
-	key, err := scrypt.Key([]byte(passphrase), salt, N, r, p, keyLen)
+	key, err := scrypt.Key([]byte(passphrase), salt, costFactor, blockSizeFactor, parallelFactor, aesKeyLen)
   if err != nil {
     return errors.New("the passphrase is not match")
   }
 
-  switch inputCmd {
-    case "encrypt":
-      cipherData, err := crypt.Encrypt(fileContent, key)
-      if err != nil {
-        return errors.New(err.Error())
-      }
-      fs.WriteFile(cipherData, *output)
-    case "decrypt":
-      plainData, err := crypt.Decrypt(fileContent, key)
-      if err != nil {
-        return errors.New(err.Error())
-      }
-      fs.WriteFile(plainData, *output)
+  var outData []byte
+  if inputCmd == "encrypt" {
+    outData, err = crypt.Encrypt(fileContent, key)
+  } else {
+    outData, err = crypt.Decrypt(fileContent, key)
   }
+
+  if err != nil {
+    return errors.New(err.Error())
+  }
+  fs.WriteFile(outData, *output)
   
   return nil
 }
