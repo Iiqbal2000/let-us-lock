@@ -15,13 +15,13 @@ import (
 	"golang.org/x/crypto/scrypt"
 )
 
-// parameters for scrypt algorithm except for aesKeyLen and saltPath variables
+// parameters for scrypt algorithm except for aesKeyLen and blockSize variables
 // https://en.wikipedia.org/wiki/Scrypt
 const (
   costFactor int                      = 32768
   blockSizeFactor int                 = 8
   parallelFactor int                  = 1
-  aesKeyLen int                       = 32
+  blockSize int                       = 32 // AES-256
   saltPath string                     = "salt.txt"
 )
 
@@ -91,7 +91,7 @@ func run(args []string, stdIn io.Reader) error {
   }
 
   // generate key from passphrase using scrypt
-	key, err := scrypt.Key([]byte(passphrase), salt, costFactor, blockSizeFactor, parallelFactor, aesKeyLen)
+	key, err := scrypt.Key([]byte(passphrase), salt, costFactor, blockSizeFactor, parallelFactor, blockSize)
   if err != nil {
     return errors.New("the passphrase is not match")
   }

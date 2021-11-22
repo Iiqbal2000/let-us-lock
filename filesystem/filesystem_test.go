@@ -1,8 +1,8 @@
 package filesystem_test
 
 import (
-	"bytes"
-	"io/ioutil"
+	// "bytes"
+	// "io/ioutil"
 	"os"
 	"testing"
 
@@ -10,27 +10,20 @@ import (
 )
 
 func TestReadFile(t *testing.T) {
-	expectation := []byte("temporary file's content")
-	tmpfile, err := ioutil.TempFile(".", "example")
+	testFile := "../kitten.png"
+	info, err := os.Stat(testFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	expectSize := info.Size()
+	
+	result, err := fs.ReadFile(testFile)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	defer os.Remove(tmpfile.Name()) // clean up
-
-	if _, err := tmpfile.Write(expectation); err != nil {
-		t.Fatal(err.Error())
-	}
-	if err := tmpfile.Close(); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	result, err := fs.ReadFile(tmpfile.Name())
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	if !bytes.Equal(expectation, result) {
-		t.Fatalf("Got error, actual value: %s", string(result))
+	if int64(len(result)) != expectSize {
+		t.Fatalf("Got error, actual value: %d\nexpect: %d", result, expectSize)
 	}
 }
 
