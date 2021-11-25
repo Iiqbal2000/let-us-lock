@@ -1,8 +1,6 @@
 package filesystem_test
 
 import (
-	// "bytes"
-	// "io/ioutil"
 	"os"
 	"testing"
 
