@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"errors"
-	"flag"
 	"io"
 	"os"
 	"strings"
@@ -33,62 +32,17 @@ var (
   ErrSaltNotFound = errors.New("failure when read salt file")
 )
 
-func main() {
-  if err := run(os.Args, os.Stdin); err != nil {
-    io.WriteString(os.Stderr, err.Error())
-    io.WriteString(os.Stderr, "\n")
-    os.Exit(2)
-  }
-}
-
-type action struct {
-  cmd *flag.FlagSet
-  options tOpts
-}
-type tOpts map[string]interface{}
-type tAct func(args []string) (*action, error)
-
-func SetEncryptAct(args []string) (*action, error) {
-  flg := flag.NewFlagSet("encrypt", flag.ExitOnError)
-  file := flg.String("f", "", "your file path which you want to encrypt/decrypt")
-  output := flg.String("o", "encrypt-result", "your file output name")
-  act := action{
-    cmd: flg,
-    options: tOpts{
-      "file": file,
-      "output" : output,
-    },
-  }
-
-  if err := flg.Parse(args[2:]); err != nil {
-      return nil, err
-  }
-
-  return &act, nil
-}
-
-func SetDecryptAct(args []string) (*action, error) {
-  flg := flag.NewFlagSet("decrypt", flag.ExitOnError)
-  file := flg.String("f", "", "your file path which you want to encrypt/decrypt")
-  output := flg.String("o", "decrypt-result", "your file output name")
-  act := action{
-    cmd: flg,
-    options: tOpts{
-      "file": file,
-      "output" : output,
-    },
-  }
-
-  if err := flg.Parse(args[2:]); err != nil {
-      return nil, err
-  }
-
-  return &act, nil
-}
-
 var actions = map[string]tAct{
   "encrypt": SetEncryptAct,
   "decrypt": SetDecryptAct,
+}
+
+func main() {
+  if err := run(os.Args, os.Stdin); err != nil {
+    io.WriteString(os.Stdout, err.Error())
+    io.WriteString(os.Stdout, "\n")
+    os.Exit(2)
+  }
 }
 
 func run(args []string, stdIn io.Reader) error {
@@ -155,13 +109,16 @@ func run(args []string, stdIn io.Reader) error {
   var outData []byte
   if inputCmd == "encrypt" {
     outData, err = crypt.Encrypt(fileContent, key)
+    if err != nil {
+      return errors.New(err.Error())
+    }
   } else {
     outData, err = crypt.Decrypt(fileContent, key)
+    if err != nil {
+      return errors.New(err.Error())
+    }
   }
 
-  if err != nil {
-    return errors.New(err.Error())
-  }
   fs.WriteFile(outData, *output)
   
   return nil
