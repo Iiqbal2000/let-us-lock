@@ -6,6 +6,8 @@ import (
 	"io"
 	"os"
 	"strings"
+  "flag"
+  "fmt"
 
 	"github.com/Iiqbal2000/let-us-lock/crypt"
 	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
@@ -32,16 +34,11 @@ var (
   ErrSaltNotFound = errors.New("failure when read salt file")
 )
 
-var actions = map[string]tAct{
-  "encrypt": SetEncryptAct,
-  "decrypt": SetDecryptAct,
-}
-
 func main() {
   if err := run(os.Args, os.Stdin); err != nil {
     io.WriteString(os.Stdout, err.Error())
     io.WriteString(os.Stdout, "\n")
-    os.Exit(2)
+    os.Exit(1)
   }
 }
 
@@ -52,38 +49,50 @@ func run(args []string, stdIn io.Reader) error {
   }
 
   var (
-    passphrase string
-    file *string
-    output *string
+    file string
+    output string
+    cmdLine *flag.FlagSet
   )
 
-  inputCmd := strings.ToLower(args[1])
-  
-  if _, ok := actions[inputCmd]; !ok {
+  if args[1] == "encrypt" {
+    cmdLine = flag.NewFlagSet("encrypt", flag.ExitOnError)
+  } else if args[1] == "decrypt" {
+    cmdLine = flag.NewFlagSet("decrypt", flag.ExitOnError)
+  } else {
     return ErrCmd
   }
 
-  cmd, err := actions[inputCmd](args)
-  if err != nil {
+  cmdLine.StringVar(&file, "f", "encrypt-result", "your file path which you want to encrypt or decrypt")
+  cmdLine.StringVar(&output, "o", "decrypt-result", "your file output name")
+  
+  cmdLine.Usage = func () {
+    fmt.Fprintln(os.Stderr, "USAGE:")
+    fmt.Fprintf(os.Stderr, "   %s -f [your file] -o [your new file]\n", args[1])
+    fmt.Fprintln(os.Stderr, "")
+    fmt.Fprintln(os.Stderr, "COMMANDS:")
+    fmt.Fprintf(os.Stderr, "   %s - to %s a file\n", args[1], args[1])
+    fmt.Fprintln(os.Stderr, "")
+    fmt.Fprintln(os.Stderr, "OPTIONS:")
+    cmdLine.PrintDefaults()
+  }
+
+  if err := cmdLine.Parse(args[2:]); err != nil {
     return err
   }
-  
-  file = cmd.options["file"].(*string)
-  output = cmd.options["output"].(*string)
 
   // get passphrase input
   io.WriteString(os.Stdout, "Enter your password (minimal 8 characters): ")
   buff := bufio.NewReader(stdIn)
   // ReadString will block until the delimiter is entered
-	strBuff, err := buff.ReadString('\n')
+	contentBuff, err := buff.ReadString('\n')
 	if err != nil {
 		return ErrPassNotFound
 	}
 	// remove the delimeter from the string
-	passphrase = strings.TrimSuffix(strBuff, "\n")
+	passphrase := strings.TrimSuffix(contentBuff, "\n")
 
   // read file
-  fileContent, err := fs.ReadFile(*file)
+  fileContent, err := fs.ReadFile(file)
   if err != nil {
     return ErrFileNotFound
   }
@@ -107,6 +116,8 @@ func run(args []string, stdIn io.Reader) error {
   }
 
   var outData []byte
+  inputCmd := strings.ToLower(args[1])
+
   if inputCmd == "encrypt" {
     outData, err = crypt.Encrypt(fileContent, key)
     if err != nil {
@@ -119,7 +130,7 @@ func run(args []string, stdIn io.Reader) error {
     }
   }
 
-  fs.WriteFile(outData, *output)
+  fs.WriteFile(outData, output)
   
   return nil
 }

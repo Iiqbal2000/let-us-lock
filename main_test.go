@@ -1,9 +1,10 @@
 package main
 
 import (
-	"testing"
 	"bytes"
+	"log"
 	"os"
+	"testing"
 )
 
 var key = []byte("passphrasetesti\n")
@@ -11,17 +12,17 @@ var key = []byte("passphrasetesti\n")
 var testSuccessCase = []struct{
 	name string
 	cmd []string
-	expectFile []string
+	wantFile []string
 } {
 		{
-			name: "encrypt",
-			cmd: []string{"main.go", "encrypt", "-f", "kitten.png", "-o", "cipherfile"},
-			expectFile: []string{"salt.txt", "cipherfile"},
+			name: "test encrypt",
+			cmd: []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+			wantFile: []string{"salt.txt", "testdata/cipherfile"},
 		},
 		{	
-			name: "decrypt",
-			cmd: []string{"main.go", "decrypt", "-f", "cipherfile", "-o", "result.png"},
-			expectFile: []string{"salt.txt", "result.png"},
+			name: "test decrypt",
+			cmd: []string{"main.go", "decrypt", "-f", "testdata/cipherfile", "-o", "testdata/result.png"},
+			wantFile: []string{"salt.txt", "testdata/result.png"},
 		},
 }
 
@@ -31,30 +32,49 @@ var testFailureCase = []struct{
 	file []string
 } {
 	{
-		name: "error",
+		name: "test with wrong command",
 		cmd: []string{"main.go", "ksiwn", "-f", "kitten.png", "-o", "cipherfile"},
 		file: []string{"salt.txt", "cipherfile"},
 	},
 	{
-		name: "error",
+		name: "test without flags",
 		cmd: []string{"main.go", "encrypt"},
 		file: []string{"salt.txt", "cipherfile"},
 	},
 	{
-		name: "error",
+		name: "test without command but flag is exist",
 		cmd: []string{"main.go", "-f", "kitten.png", "-o", "cipherfile"},
 		file: []string{"salt.txt", "cipherfile"},
 	},
 	{
-		name: "error",
+		name: "test without file flag",
 		cmd: []string{"main.go", "encrypt", "-o", "cipherfile"},
 		file: []string{"salt.txt", "cipherfile"},
 	},
 	{
-		name: "error",
+		name: "test with two commands at a time",
 		cmd: []string{"main.go", "encrypt", "decrypt", "-f", "kitten.png", "-o", "cipherfile"},
 		file: []string{"salt.txt", "cipherfile"},
 	},
+}
+
+func isFileExist(filename string) error {
+	if _, err := os.Stat(filename); err != nil {
+		return err
+	}
+	return nil
+}
+
+func deleteFiles() {
+	if err := os.Remove("salt.txt"); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Remove("testdata/cipherfile"); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Remove("testdata/result.png"); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func TestEncryptAndDecrypt(t *testing.T) {
@@ -62,35 +82,33 @@ func TestEncryptAndDecrypt(t *testing.T) {
 	
 	for _, val := range testSuccessCase {
 		stdin.Write(key)
-		run(val.cmd, &stdin)
-
-		if val.name == "encrypt" {
+		
+		if val.cmd[1] == "encrypt"{
 			t.Run(val.name, func(t *testing.T) {
-				if _, err := os.Stat(val.expectFile[0]); err != nil {
-					t.Fatalf("Got error %s file is not found. stack : %s", val.expectFile[0], err)
-				}		
-				if _, err := os.Stat(val.expectFile[1]); err != nil {
-					t.Fatalf("Got error %s file is not found. stack : %s", val.expectFile[1], err)
+				if err := run(val.cmd, &stdin); err != nil {
+					t.Fatalf("failure, something wrong\nerror: %v", err)
+				} else {
+					if err := isFileExist(val.wantFile[0]); err != nil {
+						t.Fatalf("failure: want: %v file is not found\nactual : %v", val.wantFile[0], err)	
+					}
+
+					if err := isFileExist(val.wantFile[1]); err != nil {
+						t.Fatalf("failure: want: %v file is not found\nactual : %v", val.wantFile[1], err)	
+					}
 				}
 			})
-		} else if val.name == "decrypt" {
+		} else if val.cmd[1] == "decrypt" {
 			t.Run(val.name, func(t *testing.T) {
-				if _, err := os.Stat(val.expectFile[1]); err != nil {
-					t.Fatalf("Got error %s file is not found. stack : %s", val.expectFile[1], err)
+				if err := run(val.cmd, &stdin); err != nil {
+					t.Fatalf("failure, something wrong\nerror: %v", err)
+				} else {
+					if err := isFileExist(val.wantFile[1]); err != nil {
+						t.Fatalf("failure: want: %v file is not found\nactual : %v", val.wantFile[1], err)	
+					}
 				}
 
 				func() {
-					defer func() {
-						if err := os.Remove("salt.txt"); err != nil {
-							t.Fatal(err)
-						}
-						if err := os.Remove("cipherfile"); err != nil {
-							t.Fatal(err)
-						}
-						if err := os.Remove("result.png"); err != nil {
-							t.Fatal(err)
-						}
-					}()
+					defer deleteFiles()
 				}()
 			})
 		}
@@ -106,15 +124,15 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 		err := run(elem.cmd, &stdin)
 		t.Run(elem.name, func(t *testing.T) {
 			if err == nil {
-				t.Fatal("error should appear, but it didn't")
+				t.Fatal("error should be occured, but it didn't")
 			}
 
-			if _, err := os.Stat(elem.file[0]); err == nil {
-				t.Fatalf("Got error %s file is found. stack : %s", elem.file[0], err)
+			if err := isFileExist(elem.file[0]); err == nil {
+				t.Fatalf("failure: want: %v file is not found\nactual : %v", elem.file[0], err)
 			}
 
-			if _, err := os.Stat(elem.file[1]); err == nil {
-				t.Fatalf("Got error %s file is found. stack : %s", elem.file[1], err)
+			if err := isFileExist(elem.file[1]); err == nil {
+				t.Fatalf("failure: want: %v file is not found\nactual : %v", elem.file[1], err)
 			}
 		})
 	}
