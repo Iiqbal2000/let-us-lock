@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var key = []byte("passphrasetesti\n")
+var keytest = []byte("passphrasetesti\n")
 
 var testSuccessCase = []struct{
 	name string
@@ -33,28 +33,28 @@ var testFailureCase = []struct{
 } {
 	{
 		name: "test with wrong command",
-		cmd: []string{"main.go", "ksiwn", "-f", "kitten.png", "-o", "cipherfile"},
-		file: []string{"salt.txt", "cipherfile"},
+		cmd: []string{"main.go", "ksiwn", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+		file: []string{"salt.txt", "testdata/cipherfile"},
 	},
 	{
 		name: "test without flags",
 		cmd: []string{"main.go", "encrypt"},
-		file: []string{"salt.txt", "cipherfile"},
+		file: []string{"salt.txt", "testdata/cipherfile"},
 	},
 	{
 		name: "test without command but flag is exist",
-		cmd: []string{"main.go", "-f", "kitten.png", "-o", "cipherfile"},
-		file: []string{"salt.txt", "cipherfile"},
+		cmd: []string{"main.go", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+		file: []string{"salt.txt", "testdata/cipherfile"},
 	},
 	{
 		name: "test without file flag",
-		cmd: []string{"main.go", "encrypt", "-o", "cipherfile"},
-		file: []string{"salt.txt", "cipherfile"},
+		cmd: []string{"main.go", "encrypt", "-o", "testdata/cipherfile"},
+		file: []string{"salt.txt", "testdata/cipherfile"},
 	},
 	{
 		name: "test with two commands at a time",
-		cmd: []string{"main.go", "encrypt", "decrypt", "-f", "kitten.png", "-o", "cipherfile"},
-		file: []string{"salt.txt", "cipherfile"},
+		cmd: []string{"main.go", "encrypt", "decrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+		file: []string{"salt.txt", "testdata/cipherfile"},
 	},
 }
 
@@ -81,7 +81,7 @@ func TestEncryptAndDecrypt(t *testing.T) {
 	var stdin bytes.Buffer
 	
 	for _, val := range testSuccessCase {
-		stdin.Write(key)
+		stdin.Write(keytest)
 		
 		if val.cmd[1] == "encrypt"{
 			t.Run(val.name, func(t *testing.T) {
@@ -120,7 +120,7 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 	var stdin bytes.Buffer
 
 	for _, elem := range testFailureCase {
-		stdin.Write(key)
+		stdin.Write(keytest)
 		err := run(elem.cmd, &stdin)
 		t.Run(elem.name, func(t *testing.T) {
 			if err == nil {
