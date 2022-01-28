@@ -4,15 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
-
-	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
+	"io/ioutil"
 )
 
 type decryptCmd struct {
 	flagSet flag.FlagSet
 	file string
 	output string
-	handler cryptHandler
+	decrypt cryptHandler
 }
 
 func newDecryptCmd(handler cryptHandler) *decryptCmd {
@@ -38,7 +37,7 @@ func (c *decryptCmd) Execute(args []string, kdf keyDerivator) error {
   }
 
 	// read and check file
-	fileContent, err := fs.ReadFile(c.file)
+	data, err := ioutil.ReadFile(c.file)
 	if err != nil {
 		return ErrFileNotFound
 	}
@@ -48,12 +47,15 @@ func (c *decryptCmd) Execute(args []string, kdf keyDerivator) error {
     return err
   }
 
-	var outData []byte
-	outData, err = c.handler(fileContent, key)
+	var plaintext []byte
+	plaintext, err = c.decrypt(data, key)
 	if err != nil {
 		return fmt.Errorf(err.Error())
 	}
-	fs.WriteFile(outData, c.output)
+	
+	if err = ioutil.WriteFile(c.output, plaintext, 0644); err != nil { 
+    return err
+  }
 	return nil
 }
 

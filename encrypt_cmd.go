@@ -4,15 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"os"
-
-	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
+	"io/ioutil"
 )
 
 type encryptCmd struct {
 	flagSet flag.FlagSet
 	file string
 	output string
-	handler cryptHandler
+	encrypt cryptHandler
 }
 
 func newEncryptCmd(handler cryptHandler) *encryptCmd {
@@ -38,7 +37,7 @@ func (c *encryptCmd) Execute(args []string, kdf keyDerivator) error {
   }
 	
 	// read and check file
-  fileContent, err := fs.ReadFile(c.file)
+  data, err := ioutil.ReadFile(c.file)
   if err != nil {
     return ErrFileNotFound
   }
@@ -48,13 +47,15 @@ func (c *encryptCmd) Execute(args []string, kdf keyDerivator) error {
     return err
   }
 
-	var outData []byte
-	// todo encrypt handler
-	outData, err = c.handler(fileContent, key)
+	var chipertext []byte
+	chipertext, err = c.encrypt(data, key)
 	if err != nil {
 		return fmt.Errorf(err.Error())
 	}
-	fs.WriteFile(outData, c.output)
+	
+	if err = ioutil.WriteFile(c.output, chipertext, 0644); err != nil { 
+    return err
+  }
 	return nil
 }
 
