@@ -6,10 +6,8 @@ import (
 	"errors"
 	"io"
 	"os"
+  "io/ioutil"
 
-	"github.com/Iiqbal2000/let-us-lock/crypt"
-	fs "github.com/Iiqbal2000/let-us-lock/filesystem"
-	"github.com/Iiqbal2000/let-us-lock/randstr"
 	"golang.org/x/crypto/scrypt"
 )
 
@@ -49,10 +47,12 @@ func (k keyDerivator) derive() ([]byte, error) {
   // check salt
   var salt []byte
   if _, err := os.Stat(saltFile); err != nil {
-    salt = randstr.Generate(saltLen)
-    fs.WriteFile(salt, saltFile)
+    salt = GenerateSalt(saltLen)
+    if err = ioutil.WriteFile(saltFile, salt, 0644); err != nil { 
+      return nil, err
+    }
   } else {
-    salt, err = fs.ReadFile(saltFile)
+    salt, err = ioutil.ReadFile(saltFile)
     if err != nil {
       return nil, ErrSaltNotFound
     }
@@ -74,7 +74,7 @@ func run(args []string, stdIn io.Reader) error {
     return ErrCmd
   }
   
-  commands := CliCommands{newEncryptCmd(cryptHandler(crypt.Encrypt)), newDecryptCmd(cryptHandler(crypt.Decrypt))}
+  commands := CliCommands{newEncryptCmd(cryptHandler(Encrypt)), newDecryptCmd(cryptHandler(Decrypt))}
   cmd, err := commands.GetCommand(args[1])
   if err != nil {
     return err
