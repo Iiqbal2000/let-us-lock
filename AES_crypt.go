@@ -17,7 +17,7 @@ func createBlock(key []byte) (cipher.AEAD, error) {
   return cipher.NewGCM(block)
 }
 
-// Algoritme AES mengubah blok plaintext 128-bit menjadi blok ciphertext berukuran 128 bit.
+// Encrypt encrypt plaintext to ciphertext using AES
 func Encrypt(plainData, key []byte) ([]byte, error) {
 	// create cipher block
   gcm, err := createBlock(key)
@@ -43,6 +43,7 @@ func Encrypt(plainData, key []byte) ([]byte, error) {
   return cipherData, nil
 }
 
+// Decrypt decrypt ciphertext to plaintext using AES
 func Decrypt(cipherData, key []byte) ([]byte, error) {
   gcm, err := createBlock(key)
   if err != nil { 
