@@ -63,6 +63,6 @@ func (c *encryptCmd) Execute(args []string, k key) error {
 	return nil
 }
 
-func (c *encryptCmd) Name() string {
+func (c encryptCmd) Name() string {
 	return c.flagSet.Name()
 }

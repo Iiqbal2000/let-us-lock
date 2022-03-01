@@ -63,6 +63,6 @@ func (c *decryptCmd) Execute(args []string, kdf key) error {
 	return nil
 }
 
-func (c *decryptCmd) Name() string {
+func (c decryptCmd) Name() string {
 	return c.flagSet.Name()
 }
