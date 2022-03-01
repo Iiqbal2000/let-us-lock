@@ -8,14 +8,18 @@ import (
 )
 
 type decryptCmd struct {
-	flagSet flag.FlagSet
+	flagSet *flag.FlagSet
 	file    string
 	output  string
 	decrypt cryptHandler
 }
 
-func newDecryptCmd(handler cryptHandler) *decryptCmd {
-	decryptcmd := &decryptCmd{*flag.NewFlagSet("decrypt", flag.ExitOnError), "", "", handler}
+func newDecryptCmd(decryptH cryptHandler) *decryptCmd {
+	decryptcmd := &decryptCmd{
+		flagSet: flag.NewFlagSet("decrypt", flag.ExitOnError),
+		decrypt: decryptH,
+	}
+
 	decryptcmd.flagSet.StringVar(&decryptcmd.file, "f", "encrypt-result", "your file path which you want to decrypt")
 	decryptcmd.flagSet.StringVar(&decryptcmd.output, "o", "decrypt-result", "your file output name")
 	decryptcmd.flagSet.Usage = func() {

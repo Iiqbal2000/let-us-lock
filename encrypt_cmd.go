@@ -8,14 +8,18 @@ import (
 )
 
 type encryptCmd struct {
-	flagSet flag.FlagSet
+	flagSet *flag.FlagSet
 	file    string
 	output  string
 	encrypt cryptHandler
 }
 
-func newEncryptCmd(handler cryptHandler) *encryptCmd {
-	encryptcmd := &encryptCmd{*flag.NewFlagSet("encrypt", flag.ExitOnError), "", "", handler}
+func newEncryptCmd(encryptH cryptHandler) *encryptCmd {
+	encryptcmd := &encryptCmd{
+		flagSet: flag.NewFlagSet("encrypt", flag.ExitOnError),
+		encrypt: encryptH,
+	}
+
 	encryptcmd.flagSet.StringVar(&encryptcmd.file, "f", "file", "your file path which you want to encrypt")
 	encryptcmd.flagSet.StringVar(&encryptcmd.output, "o", "encrypt-result", "your file output name")
 	encryptcmd.flagSet.Usage = func() {
