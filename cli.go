@@ -6,18 +6,18 @@ import (
 )
 
 type CliCommand interface {
-	Execute(args []string, kdf keyDerivator) error
+	Execute(args []string, kdf key) error
 	Name() string
 }
 
 type CliCommands []CliCommand
 
-func (commands CliCommands) GetCommand(commandName string) (CliCommand, error) {
+func (commands CliCommands) GetCommand(cmdIn string) (CliCommand, error) {
 	for _, command := range commands {
-		if strings.EqualFold(command.Name(), commandName) {
+		if strings.EqualFold(command.Name(), cmdIn) {
 			return command, nil
 		}
 	}
 
-	return nil, fmt.Errorf("unknown command: %s", commandName)
+	return nil, fmt.Errorf("unknown command: %s", cmdIn)
 }
