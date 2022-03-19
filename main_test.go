@@ -4,136 +4,111 @@ import (
 	"bytes"
 	"log"
 	"os"
+	"path"
 	"testing"
+
+	"github.com/matryer/is"
 )
 
 var keytest = []byte("passphrasetesti\n")
+var homeDir = getCfgPath()
 
-var testSuccessCase = []struct{
-	name string
-	cmd []string
-	wantFile []string
-} {
-		{
-			name: "test encrypt",
-			cmd: []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
-			wantFile: []string{"salt.txt", "testdata/cipherfile"},
-		},
-		{	
-			name: "test decrypt",
-			cmd: []string{"main.go", "decrypt", "-f", "testdata/cipherfile", "-o", "testdata/result.png"},
-			wantFile: []string{"salt.txt", "testdata/result.png"},
-		},
-}
-
-var testFailureCase = []struct{
-	name string
-	cmd []string
-	file []string
-} {
-	{
-		name: "test with wrong command",
-		cmd: []string{"main.go", "ksiwn", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
-		file: []string{"salt.txt", "testdata/cipherfile"},
-	},
-	{
-		name: "test without flags",
-		cmd: []string{"main.go", "encrypt"},
-		file: []string{"salt.txt", "testdata/cipherfile"},
-	},
-	{
-		name: "test without command but flag is exist",
-		cmd: []string{"main.go", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
-		file: []string{"salt.txt", "testdata/cipherfile"},
-	},
-	{
-		name: "test without file flag",
-		cmd: []string{"main.go", "encrypt", "-o", "testdata/cipherfile"},
-		file: []string{"salt.txt", "testdata/cipherfile"},
-	},
-	{
-		name: "test with two commands at a time",
-		cmd: []string{"main.go", "encrypt", "decrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
-		file: []string{"salt.txt", "testdata/cipherfile"},
-	},
-}
-
-func isFileExist(filename string) error {
+func isFileExist(filename string) bool {
 	if _, err := os.Stat(filename); err != nil {
-		return err
+		return false
 	}
-	return nil
+	return true
 }
 
-func deleteFiles() {
-	if err := os.Remove("salt.txt"); err != nil {
+func deleteFiles(cfgPath string, ouputFile ...string) {
+	if err := os.RemoveAll(cfgPath); err != nil {
 		log.Fatal(err)
 	}
-	if err := os.Remove("testdata/cipherfile"); err != nil {
-		log.Fatal(err)
-	}
-	if err := os.Remove("testdata/result.png"); err != nil {
-		log.Fatal(err)
-	}
-}
 
-func TestEncryptAndDecrypt(t *testing.T) {
-	var stdin bytes.Buffer
-	
-	for _, val := range testSuccessCase {
-		stdin.Write(keytest)
-		
-		if val.cmd[1] == "encrypt"{
-			t.Run(val.name, func(t *testing.T) {
-				if err := run(val.cmd, &stdin); err != nil {
-					t.Fatalf("failure, something wrong\nerror: %v", err)
-				} else {
-					if err := isFileExist(val.wantFile[0]); err != nil {
-						t.Fatalf("failure: want: %v file is not found\nactual : %v", val.wantFile[0], err)	
-					}
-
-					if err := isFileExist(val.wantFile[1]); err != nil {
-						t.Fatalf("failure: want: %v file is not found\nactual : %v", val.wantFile[1], err)	
-					}
-				}
-			})
-		} else if val.cmd[1] == "decrypt" {
-			t.Run(val.name, func(t *testing.T) {
-				if err := run(val.cmd, &stdin); err != nil {
-					t.Fatalf("failure, something wrong\nerror: %v", err)
-				} else {
-					if err := isFileExist(val.wantFile[1]); err != nil {
-						t.Fatalf("failure: want: %v file is not found\nactual : %v", val.wantFile[1], err)	
-					}
-				}
-
-				func() {
-					defer deleteFiles()
-				}()
-			})
+	for _, f := range ouputFile {
+		if err := os.Remove(f); err != nil {
+			log.Fatal(err)
 		}
 	}
+}
 
+func TestEncrypt(t *testing.T) {
+	cmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
+	wantOutputFile := "testdata/cipherfile"
+	wantSaltFile := path.Join(homeDir, cfgFile)
+
+	is := is.New(t)
+
+	err := run(cmd, bytes.NewReader(keytest))
+	is.NoErr(err)
+	is.Equal(isFileExist(wantOutputFile), true)
+	is.Equal(isFileExist(wantSaltFile), true)
+	deleteFiles(homeDir, wantOutputFile)
+}
+
+func TestDecrypt(t *testing.T) {
+	encryptCmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
+	err := run(encryptCmd, bytes.NewReader(keytest))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	cmd := []string{"main.go", "decrypt", "-f", "testdata/cipherfile", "-o", "testdata/result.png"}
+	wantOutputFile := "testdata/result.png"
+	wantSaltFile := path.Join(homeDir, cfgFile)
+
+	is := is.New(t)
+
+	err = run(cmd, bytes.NewReader(keytest))
+	is.NoErr(err)
+	is.Equal(isFileExist(wantOutputFile), true)
+	is.Equal(isFileExist(wantSaltFile), true)
+	deleteFiles(homeDir, wantOutputFile, "testdata/cipherfile")
 }
 
 func TestEncryptAndDecryptFailure(t *testing.T) {
 	var stdin bytes.Buffer
+	var cases = []struct {
+		name string
+		cmd  []string
+		file []string
+	}{
+		{
+			name: "test with wrong command",
+			cmd:  []string{"main.go", "ksiwn", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+		},
+		{
+			name: "test without flags",
+			cmd:  []string{"main.go", "encrypt"},
+			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+		},
+		{
+			name: "test without command but flag is exist",
+			cmd:  []string{"main.go", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+		},
+		{
+			name: "test without file flag",
+			cmd:  []string{"main.go", "encrypt", "-o", "testdata/cipherfile"},
+			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+		},
+		{
+			name: "test with two commands at a time",
+			cmd:  []string{"main.go", "encrypt", "decrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+		},
+	}
 
-	for _, elem := range testFailureCase {
-		stdin.Write(keytest)
-		err := run(elem.cmd, &stdin)
+	for _, elem := range cases {
 		t.Run(elem.name, func(t *testing.T) {
-			if err == nil {
-				t.Fatal("error should be occured, but it didn't")
-			}
+			stdin.Write(keytest)
+			err := run(elem.cmd, &stdin)
 
-			if err := isFileExist(elem.file[0]); err == nil {
-				t.Fatalf("failure: want: %v file is not found\nactual : %v", elem.file[0], err)
-			}
-
-			if err := isFileExist(elem.file[1]); err == nil {
-				t.Fatalf("failure: want: %v file is not found\nactual : %v", elem.file[1], err)
-			}
+			is := is.New(t)
+			is.True(err != nil)
+			is.True(isFileExist(elem.file[0]) != true)
+			is.True(isFileExist(elem.file[1]) != true)
 		})
 	}
 }
