@@ -39,7 +39,7 @@ func TestEncrypt(t *testing.T) {
 
 	is := is.New(t)
 
-	err := run(cmd, bytes.NewReader(keytest))
+	err := run(cmd, bytes.NewReader(keytest), false)
 	is.NoErr(err)
 	is.Equal(isFileExist(wantOutputFile), true)
 	is.Equal(isFileExist(wantSaltFile), true)
@@ -48,7 +48,7 @@ func TestEncrypt(t *testing.T) {
 
 func TestDecrypt(t *testing.T) {
 	encryptCmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
-	err := run(encryptCmd, bytes.NewReader(keytest))
+	err := run(encryptCmd, bytes.NewReader(keytest), false)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -59,7 +59,7 @@ func TestDecrypt(t *testing.T) {
 
 	is := is.New(t)
 
-	err = run(cmd, bytes.NewReader(keytest))
+	err = run(cmd, bytes.NewReader(keytest), false)
 	is.NoErr(err)
 	is.Equal(isFileExist(wantOutputFile), true)
 	is.Equal(isFileExist(wantSaltFile), true)
@@ -103,7 +103,7 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 	for _, elem := range cases {
 		t.Run(elem.name, func(t *testing.T) {
 			stdin.Write(keytest)
-			err := run(elem.cmd, &stdin)
+			err := run(elem.cmd, &stdin, false)
 
 			is := is.New(t)
 			is.True(err != nil)

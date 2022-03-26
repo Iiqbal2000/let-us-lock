@@ -5,6 +5,9 @@ import (
 	"errors"
 	"io"
 	"os"
+	"syscall"
+
+	"golang.org/x/term"
 )
 
 var (
@@ -16,7 +19,7 @@ var (
 )
 
 func main() {
-	if err := run(os.Args, os.Stdin); err != nil {
+	if err := run(os.Args, os.Stdin, true); err != nil {
 		io.WriteString(os.Stdout, err.Error())
 		io.WriteString(os.Stdout, "\n")
 		os.Exit(1)
@@ -25,7 +28,7 @@ func main() {
 
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
-func run(args []string, stdIn io.Reader) error {
+func run(args []string, stdIn io.Reader, hidePassword bool) error {
 	if len(args) < 2 {
 		return ErrCmd
 	}
@@ -35,7 +38,7 @@ func run(args []string, stdIn io.Reader) error {
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-  // get command that put by the user
+	// get command that put by the user
 	cmd, err := commands.GetCommand(args[1])
 	if err != nil {
 		return err
@@ -43,11 +46,17 @@ func run(args []string, stdIn io.Reader) error {
 
 	// get passphrase from user input
 	io.WriteString(os.Stdout, "Enter your password (minimal 8 characters): ")
+	
+	var rawPassphrase []byte
 
-	buff := bufio.NewReader(stdIn)
+	if hidePassword {
+		rawPassphrase, err = term.ReadPassword(int(syscall.Stdin))
+		io.WriteString(os.Stdout, "\n")
+	} else {
+		buff := bufio.NewReader(stdIn)
+		rawPassphrase, err = buff.ReadBytes('\n')
+	}
 
-	// read passphrase until \n
-	rawPassphrase, err := buff.ReadBytes('\n')
 	if err != nil {
 		return ErrPassNotFound
 	}
