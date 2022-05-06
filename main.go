@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"io"
 	"os"
@@ -48,7 +47,7 @@ func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 
 	// get passphrase from user input
 	io.WriteString(stdOut, "Enter your password (min 8 characters and max 64 characters): ")
-	
+
 	var rawPassphrase []byte
 
 	if hidePassword {
