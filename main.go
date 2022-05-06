@@ -19,7 +19,7 @@ var (
 )
 
 func main() {
-	if err := run(os.Args, os.Stdin, true); err != nil {
+	if err := run(os.Args, os.Stdin, os.Stdout, true); err != nil {
 		io.WriteString(os.Stdout, err.Error())
 		io.WriteString(os.Stdout, "\n")
 		os.Exit(1)
@@ -28,7 +28,7 @@ func main() {
 
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
-func run(args []string, stdIn io.Reader, hidePassword bool) error {
+func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 	if len(args) < 2 {
 		return ErrCmd
 	}
@@ -45,13 +45,13 @@ func run(args []string, stdIn io.Reader, hidePassword bool) error {
 	}
 
 	// get passphrase from user input
-	io.WriteString(os.Stdout, "Enter your password (minimal 8 characters): ")
+	io.WriteString(stdOut, "Enter your password (min 8 characters and max 64 characters): ")
 	
 	var rawPassphrase []byte
 
 	if hidePassword {
 		rawPassphrase, err = term.ReadPassword(int(syscall.Stdin))
-		io.WriteString(os.Stdout, "\n")
+		io.WriteString(stdOut, "\n")
 	} else {
 		buff := bufio.NewReader(stdIn)
 		rawPassphrase, err = buff.ReadBytes('\n')
