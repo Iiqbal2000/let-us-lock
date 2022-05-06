@@ -55,8 +55,7 @@ func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 		rawPassphrase, err = term.ReadPassword(int(syscall.Stdin))
 		io.WriteString(stdOut, "\n")
 	} else {
-		buff := bufio.NewReader(stdIn)
-		rawPassphrase, err = buff.ReadBytes('\n')
+		rawPassphrase, err = io.ReadAll(stdIn)
 	}
 
 	if err != nil {
