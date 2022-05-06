@@ -12,7 +12,9 @@ import (
 
 var (
 	ErrCmd          = errors.New("you have to include 'encrypt' or 'decrypt' command")
-	ErrPassWrong    = errors.New("the passphrase is not match")
+	ErrPassWrong    = errors.New("invalid passphrase")
+	ErrPassTooShort = errors.New("the passphrase too short (MIN 8 characters)")
+	ErrPassTooLong  = errors.New("the passphrase too long (MAX 64 characters)")
 	ErrPassNotFound = errors.New("password is required")
 	ErrFileNotFound = errors.New("the file is not found")
 	ErrSaltNotFound = errors.New("failure when read salt file")
@@ -59,6 +61,13 @@ func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 
 	if err != nil {
 		return ErrPassNotFound
+	}
+
+	// Validate the passphrase
+	if len(rawPassphrase) < 8 {
+		return ErrPassTooShort
+	} else if len(rawPassphrase) > 64 {
+		return ErrPassTooLong
 	}
 
 	err = cmd.Execute(args, key(rawPassphrase))
