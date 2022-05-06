@@ -39,7 +39,10 @@ func TestEncrypt(t *testing.T) {
 
 	is := is.New(t)
 
-	err := run(cmd, bytes.NewReader(keytest), false)
+	r := bytes.NewBuffer(keytest)
+	w := bytes.NewBuffer([]byte{})
+
+	err := run(cmd, r, w, false)
 	is.NoErr(err)
 	is.Equal(isFileExist(wantOutputFile), true)
 	is.Equal(isFileExist(wantSaltFile), true)
@@ -48,7 +51,10 @@ func TestEncrypt(t *testing.T) {
 
 func TestDecrypt(t *testing.T) {
 	encryptCmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
-	err := run(encryptCmd, bytes.NewReader(keytest), false)
+	r := bytes.NewBuffer(keytest)
+	w := bytes.NewBuffer([]byte{})
+
+	err := run(encryptCmd, r, w, false)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -59,7 +65,7 @@ func TestDecrypt(t *testing.T) {
 
 	is := is.New(t)
 
-	err = run(cmd, bytes.NewReader(keytest), false)
+	err = run(cmd, bytes.NewBuffer(keytest), w, false)
 	is.NoErr(err)
 	is.Equal(isFileExist(wantOutputFile), true)
 	is.Equal(isFileExist(wantSaltFile), true)
@@ -67,7 +73,6 @@ func TestDecrypt(t *testing.T) {
 }
 
 func TestEncryptAndDecryptFailure(t *testing.T) {
-	var stdin bytes.Buffer
 	var cases = []struct {
 		name string
 		cmd  []string
@@ -102,8 +107,10 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 
 	for _, elem := range cases {
 		t.Run(elem.name, func(t *testing.T) {
-			stdin.Write(keytest)
-			err := run(elem.cmd, &stdin, false)
+			r := bytes.NewBuffer(keytest)
+			w := bytes.NewBuffer([]byte{})
+
+			err := run(elem.cmd, r, w, false)
 
 			is := is.New(t)
 			is.True(err != nil)
