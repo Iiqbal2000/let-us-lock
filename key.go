@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
-	"math/rand"
+
+	// "math/rand"
+	"crypto/rand"
 	"os"
 	"path"
-	"time"
 
 	"golang.org/x/crypto/scrypt"
 )
@@ -15,10 +16,10 @@ import (
 // parameters for scrypt algorithm except for aesKeyLen and
 // blockSize variables.
 var (
-	costFactor      int = 32768 // number of iteration
-	blockSizeFactor int = 8
-	parallelFactor  int = 1
-	blockSize       int = 32 // one of the size blocks that is used AES-256
+	costFactor      int    = 32768 // number of iteration
+	blockSizeFactor int    = 8
+	parallelFactor  int    = 1
+	blockSize       int    = 32 // one of the size blocks that is used AES-256
 	cfgDirDefault   string = ".config/let-us-lock"
 	cfgFile         string = "config.txt"
 	saltLen         int    = 50 // salt length
@@ -78,18 +79,8 @@ func (k key) derive() ([]byte, error) {
 
 // generateSalt generates random salt.
 func (k key) generateSalt(size int) []byte {
-	var salt []byte
-	// ASCII range
-	min := 32
-	max := 127
-
-	rand.Seed(time.Now().UnixNano())
-
-	for i := 0; i < size; i++ {
-		// randomize in ascii range
-		random := rand.Intn(max-min+1) + min
-		salt = append(salt, byte(random))
-	}
+	salt := make([]byte, size)
+	rand.Read(salt)
 
 	return salt
 }
