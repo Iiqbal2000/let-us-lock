@@ -39,13 +39,18 @@ func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-	// get command that put by the user
+	// get a command
 	cmd, err := commands.GetCommand(args[1])
 	if err != nil {
 		return err
 	}
 
-	// get passphrase from user input
+	err = cmd.Validate(args)
+	if err != nil {
+		return err
+	}
+
+	// get a passphrase
 	io.WriteString(stdOut, "Enter your password (min 8 characters and max 64 characters): ")
 
 	var rawPassphrase []byte
@@ -68,7 +73,7 @@ func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 		return ErrPassTooLong
 	}
 
-	err = cmd.Execute(args, key(rawPassphrase))
+	err = cmd.Execute(key(rawPassphrase))
 	if err != nil {
 		return err
 	}

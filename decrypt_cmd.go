@@ -34,11 +34,14 @@ func newDecryptCmd(decryptH cryptHandler) *decryptCmd {
 	return decryptcmd
 }
 
-func (c *decryptCmd) Execute(args []string, kdf key) error {
+func (c *decryptCmd) Validate(args []string) error {
 	if err := c.flagSet.Parse(args[2:]); err != nil {
 		return err
 	}
+	return nil
+}
 
+func (c *decryptCmd) Execute(kdf key) error {
 	// read and check file
 	data, err := os.ReadFile(c.inputPath)
 	if err != nil {
