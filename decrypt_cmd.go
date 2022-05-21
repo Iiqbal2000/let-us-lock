@@ -3,15 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
 type decryptCmd struct {
-	flagSet *flag.FlagSet
-	file    string
-	output  string
-	decrypt cryptHandler
+	flagSet    *flag.FlagSet
+	inputPath  string
+	outputPath string
+	decrypt    cryptHandler
 }
 
 func newDecryptCmd(decryptH cryptHandler) *decryptCmd {
@@ -20,8 +19,8 @@ func newDecryptCmd(decryptH cryptHandler) *decryptCmd {
 		decrypt: decryptH,
 	}
 
-	decryptcmd.flagSet.StringVar(&decryptcmd.file, "f", "encrypt-result", "your file path which you want to decrypt")
-	decryptcmd.flagSet.StringVar(&decryptcmd.output, "o", "decrypt-result", "your file output name")
+	decryptcmd.flagSet.StringVar(&decryptcmd.inputPath, "f", "encrypt-result", "your file path which you want to decrypt")
+	decryptcmd.flagSet.StringVar(&decryptcmd.outputPath, "o", "decrypt-result", "your file output name")
 	decryptcmd.flagSet.Usage = func() {
 		fmt.Fprintln(os.Stderr, "USAGE:")
 		fmt.Fprintln(os.Stderr, "   decrypt -f [your file] -o [your new file]")
@@ -35,13 +34,16 @@ func newDecryptCmd(decryptH cryptHandler) *decryptCmd {
 	return decryptcmd
 }
 
-func (c *decryptCmd) Execute(args []string, kdf key) error {
+func (c *decryptCmd) Validate(args []string) error {
 	if err := c.flagSet.Parse(args[2:]); err != nil {
 		return err
 	}
+	return nil
+}
 
+func (c *decryptCmd) Execute(kdf key) error {
 	// read and check file
-	data, err := ioutil.ReadFile(c.file)
+	data, err := os.ReadFile(c.inputPath)
 	if err != nil {
 		return ErrFileNotFound
 	}
@@ -57,7 +59,7 @@ func (c *decryptCmd) Execute(args []string, kdf key) error {
 		return fmt.Errorf(err.Error())
 	}
 
-	if err = ioutil.WriteFile(c.output, plaintext, 0644); err != nil {
+	if err = os.WriteFile(c.outputPath, plaintext, 0644); err != nil {
 		return err
 	}
 	return nil

@@ -1,22 +1,26 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"io"
 	"os"
+	"syscall"
+
+	"golang.org/x/term"
 )
 
 var (
 	ErrCmd          = errors.New("you have to include 'encrypt' or 'decrypt' command")
-	ErrPassWrong    = errors.New("the passphrase is not match")
+	ErrPassWrong    = errors.New("invalid passphrase")
+	ErrPassTooShort = errors.New("the passphrase too short (MIN 8 characters)")
+	ErrPassTooLong  = errors.New("the passphrase too long (MAX 64 characters)")
 	ErrPassNotFound = errors.New("password is required")
 	ErrFileNotFound = errors.New("the file is not found")
 	ErrSaltNotFound = errors.New("failure when read salt file")
 )
 
 func main() {
-	if err := run(os.Args, os.Stdin); err != nil {
+	if err := run(os.Args, os.Stdin, os.Stdout, true); err != nil {
 		io.WriteString(os.Stdout, err.Error())
 		io.WriteString(os.Stdout, "\n")
 		os.Exit(1)
@@ -25,7 +29,7 @@ func main() {
 
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
-func run(args []string, stdIn io.Reader) error {
+func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 	if len(args) < 2 {
 		return ErrCmd
 	}
@@ -35,24 +39,41 @@ func run(args []string, stdIn io.Reader) error {
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-  // get command that put by the user
+	// get a command
 	cmd, err := commands.GetCommand(args[1])
 	if err != nil {
 		return err
 	}
 
-	// get passphrase from user input
-	io.WriteString(os.Stdout, "Enter your password (minimal 8 characters): ")
+	err = cmd.Validate(args)
+	if err != nil {
+		return err
+	}
 
-	buff := bufio.NewReader(stdIn)
+	// get a passphrase
+	io.WriteString(stdOut, "Enter your password (min 8 characters and max 64 characters): ")
 
-	// read passphrase until \n
-	rawPassphrase, err := buff.ReadBytes('\n')
+	var rawPassphrase []byte
+
+	if hidePassword {
+		rawPassphrase, err = term.ReadPassword(int(syscall.Stdin))
+		io.WriteString(stdOut, "\n")
+	} else {
+		rawPassphrase, err = io.ReadAll(stdIn)
+	}
+
 	if err != nil {
 		return ErrPassNotFound
 	}
 
-	err = cmd.Execute(args, key(rawPassphrase))
+	// Validate the passphrase
+	if len(rawPassphrase) < 8 {
+		return ErrPassTooShort
+	} else if len(rawPassphrase) > 64 {
+		return ErrPassTooLong
+	}
+
+	err = cmd.Execute(key(rawPassphrase))
 	if err != nil {
 		return err
 	}

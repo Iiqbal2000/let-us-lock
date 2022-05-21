@@ -3,15 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
 type encryptCmd struct {
-	flagSet *flag.FlagSet
-	file    string
-	output  string
-	encrypt cryptHandler
+	flagSet    *flag.FlagSet
+	inputPath  string
+	outputPath string
+	encrypt    cryptHandler
 }
 
 func newEncryptCmd(encryptH cryptHandler) *encryptCmd {
@@ -20,8 +19,8 @@ func newEncryptCmd(encryptH cryptHandler) *encryptCmd {
 		encrypt: encryptH,
 	}
 
-	encryptcmd.flagSet.StringVar(&encryptcmd.file, "f", "file", "your file path which you want to encrypt")
-	encryptcmd.flagSet.StringVar(&encryptcmd.output, "o", "encrypt-result", "your file output name")
+	encryptcmd.flagSet.StringVar(&encryptcmd.inputPath, "f", "file", "your file path which you want to encrypt")
+	encryptcmd.flagSet.StringVar(&encryptcmd.outputPath, "o", "encrypt-result", "your file output name")
 	encryptcmd.flagSet.Usage = func() {
 		fmt.Fprintln(os.Stderr, "USAGE:")
 		fmt.Fprintln(os.Stderr, "   encrypt -f [your file] -o [your new file]")
@@ -35,13 +34,16 @@ func newEncryptCmd(encryptH cryptHandler) *encryptCmd {
 	return encryptcmd
 }
 
-func (c *encryptCmd) Execute(args []string, k key) error {
+func (c *encryptCmd) Validate(args []string) error {
 	if err := c.flagSet.Parse(args[2:]); err != nil {
 		return err
 	}
+	return nil
+}
 
+func (c *encryptCmd) Execute(k key) error {
 	// read and check file
-	data, err := ioutil.ReadFile(c.file)
+	data, err := os.ReadFile(c.inputPath)
 	if err != nil {
 		return ErrFileNotFound
 	}
@@ -57,7 +59,7 @@ func (c *encryptCmd) Execute(args []string, k key) error {
 		return fmt.Errorf(err.Error())
 	}
 
-	if err = ioutil.WriteFile(c.output, chipertext, 0644); err != nil {
+	if err = os.WriteFile(c.outputPath, chipertext, 0644); err != nil {
 		return err
 	}
 	return nil

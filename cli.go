@@ -6,8 +6,9 @@ import (
 )
 
 type CliCommand interface {
-	Execute(args []string, kdf key) error
+	Execute(kdf key) error
 	Name() string
+	Validate(args []string) error
 }
 
 type CliCommands []CliCommand
