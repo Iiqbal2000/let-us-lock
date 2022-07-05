@@ -3,9 +3,6 @@ package main
 import (
 	"bytes"
 	"io/ioutil"
-	"log"
-
-	// "math/rand"
 	"crypto/rand"
 	"os"
 	"path"
@@ -20,51 +17,28 @@ var (
 	blockSizeFactor int    = 8
 	parallelFactor  int    = 1
 	blockSize       int    = 32 // one of the size blocks that is used AES-256
-	cfgDirDefault   string = ".config/let-us-lock"
-	cfgFile         string = "config.txt"
 	saltLen         int    = 50 // salt length
 )
 
+// key contains a passphrase.
 type key []byte
-
-// getCfgPath constructs a path of config dir.
-func getCfgPath() string {
-	usr, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	return path.Join(usr, cfgDirDefault)
-}
-
-// checkCfgDir checks config dir if the config dir does not
-// exist, it will create.
-func checkCfgDir(cfgPath string) string {
-	if _, err := os.Stat(cfgPath); err != nil {
-		err := os.MkdirAll(cfgPath, 0750)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-	}
-	return cfgPath
-}
 
 // derive derives a key from passphrase using scrypt kdf.
 func (k key) derive() ([]byte, error) {
 	// remove delimiter from the string.
 	passphrase := bytes.TrimSuffix(k, []byte("\n"))
 
-	cfgDir := checkCfgDir(getCfgPath())
+	cfgDirPath := checkCfgDir(getCfgPath())
 
 	var salt []byte
 
-	if _, err := os.Stat(path.Join(cfgDir, cfgFile)); err != nil {
+	if _, err := os.Stat(path.Join(cfgDirPath, cfgFile)); os.IsNotExist(err) {
 		salt = k.generateSalt(saltLen)
-		if err = ioutil.WriteFile(path.Join(cfgDir, cfgFile), salt, 0644); err != nil {
+		if err = ioutil.WriteFile(path.Join(cfgDirPath, cfgFile), salt, 0644); err != nil {
 			return nil, err
 		}
 	} else {
-		salt, err = ioutil.ReadFile(path.Join(cfgDir, cfgFile))
+		salt, err = ioutil.ReadFile(path.Join(cfgDirPath, cfgFile))
 		if err != nil {
 			return nil, ErrSaltNotFound
 		}
