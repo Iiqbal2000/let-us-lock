@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
 	"crypto/rand"
 	"os"
 	"path"
@@ -13,11 +12,11 @@ import (
 // parameters for scrypt algorithm except for aesKeyLen and
 // blockSize variables.
 var (
-	costFactor      int    = 32768 // number of iteration
-	blockSizeFactor int    = 8
-	parallelFactor  int    = 1
-	blockSize       int    = 32 // one of the size blocks that is used AES-256
-	saltLen         int    = 50 // salt length
+	costFactor      int = 32768 // number of iteration
+	blockSizeFactor int = 8
+	parallelFactor  int = 1
+	blockSize       int = 32 // one of the size blocks that is used AES-256
+	saltLen         int = 50 // salt length
 )
 
 // key contains a passphrase.
@@ -32,13 +31,16 @@ func (k key) derive() ([]byte, error) {
 
 	var salt []byte
 
-	if _, err := os.Stat(path.Join(cfgDirPath, cfgFile)); os.IsNotExist(err) {
+	filePath := path.Join(cfgDirPath, cfgFile)
+
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		salt = k.generateSalt(saltLen)
-		if err = ioutil.WriteFile(path.Join(cfgDirPath, cfgFile), salt, 0644); err != nil {
+		if err = os.WriteFile(filePath, salt, 0644); err != nil {
 			return nil, err
 		}
+
 	} else {
-		salt, err = ioutil.ReadFile(path.Join(cfgDirPath, cfgFile))
+		salt, err = os.ReadFile(filePath)
 		if err != nil {
 			return nil, ErrSaltNotFound
 		}
