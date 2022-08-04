@@ -11,12 +11,12 @@ import (
 
 var (
 	ErrCmd          = errors.New("you have to include 'encrypt' or 'decrypt' command")
-	ErrPassWrong    = errors.New("invalid passphrase")
-	ErrPassTooShort = errors.New("the passphrase too short (MIN 8 characters)")
-	ErrPassTooLong  = errors.New("the passphrase too long (MAX 64 characters)")
-	ErrPassNotFound = errors.New("password is required")
+	ErrPassWrong    = errors.New("the password/passphrase is invalid")
+	ErrPassTooShort = errors.New("the password/passphrase too short (MIN 8 characters)")
+	ErrPassTooLong  = errors.New("the password/passphrase too long (MAX 64 characters)")
+	ErrPassNotFound = errors.New("the password/passphrase is required")
 	ErrFileNotFound = errors.New("the file is not found")
-	ErrSaltNotFound = errors.New("failure when read salt file")
+	ErrSaltNotFound = errors.New("failure when reading a salt file")
 )
 
 func main() {
