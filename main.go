@@ -21,9 +21,9 @@ var (
 
 func main() {
 	err := run(config{
-		args: os.Args,
-		stdIn: os.Stdin,
-		stdOut: os.Stdout,
+		args:   os.Args,
+		input:  os.Stdin,
+		output: os.Stdout,
 	})
 	if err != nil {
 		io.WriteString(os.Stdout, err.Error())
@@ -35,9 +35,9 @@ func main() {
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
 type config struct {
-	args []string
-	stdIn io.ReadWriter
-	stdOut io.ReadWriter
+	args   []string
+	input  io.ReadWriter
+	output io.ReadWriter
 }
 
 func run(conf config) error {
@@ -62,7 +62,7 @@ func run(conf config) error {
 	}
 
 	// get a passphrase
-	io.WriteString(conf.stdOut, "Enter your password (min 8 characters and max 64 characters): ")
+	io.WriteString(conf.output, "Enter your password (min 8 characters and max 64 characters): ")
 
 	passphrase, err := catchPassphrase(term.ReadPassword(int(syscall.Stdin)))
 	if err != nil {
@@ -99,9 +99,9 @@ func runForTesting(conf config) error {
 	}
 
 	// get a passphrase
-	io.WriteString(conf.stdOut, "Enter your password (min 8 characters and max 64 characters): ")
+	io.WriteString(conf.output, "Enter your password (min 8 characters and max 64 characters): ")
 
-	passphrase, err := catchPassphrase(io.ReadAll(conf.stdIn))
+	passphrase, err := catchPassphrase(io.ReadAll(conf.input))
 	if err != nil {
 		return err
 	}
