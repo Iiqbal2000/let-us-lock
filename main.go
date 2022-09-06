@@ -20,7 +20,12 @@ var (
 )
 
 func main() {
-	if err := run(os.Args, os.Stdin, os.Stdout, true); err != nil {
+	err := run(config{
+		args: os.Args,
+		stdIn: os.Stdin,
+		stdOut: os.Stdout,
+	})
+	if err != nil {
 		io.WriteString(os.Stdout, err.Error())
 		io.WriteString(os.Stdout, "\n")
 		os.Exit(1)
@@ -29,8 +34,14 @@ func main() {
 
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
-func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
-	if len(args) < 2 {
+type config struct {
+	args []string
+	stdIn io.ReadWriter
+	stdOut io.ReadWriter
+}
+
+func run(conf config) error {
+	if len(conf.args) < 2 {
 		return ErrCmd
 	}
 
@@ -40,40 +51,62 @@ func run(args []string, stdIn, stdOut io.ReadWriter, hidePassword bool) error {
 	}
 
 	// get a command
-	cmd, err := commands.GetCommand(args[1])
+	cmd, err := commands.GetCommand(conf.args[1])
 	if err != nil {
 		return err
 	}
 
-	err = cmd.Validate(args)
+	err = cmd.Validate(conf.args)
 	if err != nil {
 		return err
 	}
 
 	// get a passphrase
-	io.WriteString(stdOut, "Enter your password (min 8 characters and max 64 characters): ")
+	io.WriteString(conf.stdOut, "Enter your password (min 8 characters and max 64 characters): ")
 
-	var rawPassphrase []byte
-
-	if hidePassword {
-		rawPassphrase, err = term.ReadPassword(int(syscall.Stdin))
-		io.WriteString(stdOut, "\n")
-	} else {
-		rawPassphrase, err = io.ReadAll(stdIn)
-	}
-
+	passphrase, err := catchPassphrase(term.ReadPassword(int(syscall.Stdin)))
 	if err != nil {
-		return ErrPassNotFound
+		return err
 	}
 
-	// Validate the passphrase
-	if len(rawPassphrase) < 8 {
-		return ErrPassTooShort
-	} else if len(rawPassphrase) > 64 {
-		return ErrPassTooLong
+	err = cmd.Execute(key(passphrase))
+	if err != nil {
+		return err
 	}
 
-	err = cmd.Execute(key(rawPassphrase))
+	return nil
+}
+
+func runForTesting(conf config) error {
+	if len(conf.args) < 2 {
+		return ErrCmd
+	}
+
+	commands := CliCommands{
+		newEncryptCmd(cryptHandler(Encrypt)),
+		newDecryptCmd(cryptHandler(Decrypt)),
+	}
+
+	// get a command
+	cmd, err := commands.GetCommand(conf.args[1])
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Validate(conf.args)
+	if err != nil {
+		return err
+	}
+
+	// get a passphrase
+	io.WriteString(conf.stdOut, "Enter your password (min 8 characters and max 64 characters): ")
+
+	passphrase, err := catchPassphrase(io.ReadAll(conf.stdIn))
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Execute(key(passphrase))
 	if err != nil {
 		return err
 	}
