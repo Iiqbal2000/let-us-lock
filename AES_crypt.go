@@ -9,7 +9,7 @@ import (
 
 // Encrypt encrypt plaintext to ciphertext using AES.
 func Encrypt(plainData, key []byte) ([]byte, error) {
-  gcm, err := createCipherBlock(key)
+  gcm, err := wrapWithGCM(createCipherBlock(key))
   if err != nil { 
     return nil, err
   }
@@ -34,7 +34,7 @@ func Encrypt(plainData, key []byte) ([]byte, error) {
 
 // Decrypt decrypt ciphertext to plaintext using AES.
 func Decrypt(cipherData, key []byte) ([]byte, error) {
-  gcm, err := createCipherBlock(key)
+  gcm, err := wrapWithGCM(createCipherBlock(key))
   if err != nil { 
     return nil, err
   }
@@ -51,11 +51,18 @@ func Decrypt(cipherData, key []byte) ([]byte, error) {
   return plainData, nil
 }
 
-func createCipherBlock(key []byte) (cipher.AEAD, error) {
+func createCipherBlock(key []byte) (cipher.Block, error) {
   block, err := aes.NewCipher(key)
   if err != nil { 
     return nil, err
   }
   
+  return block, nil
+}
+
+func wrapWithGCM(block cipher.Block, err error) (cipher.AEAD, error) {
+  if err != nil { 
+    return nil, err
+  }
   return cipher.NewGCM(block)
 }
