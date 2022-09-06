@@ -19,6 +19,8 @@ var (
 	ErrSaltNotFound = errors.New("failure when reading a salt file")
 )
 
+const minArgsLen = 2
+
 func main() {
 	err := run(config{
 		args:   os.Args,
@@ -41,7 +43,7 @@ type config struct {
 }
 
 func run(conf config) error {
-	if len(conf.args) < 2 {
+	if len(conf.args) < minArgsLen {
 		return ErrCmd
 	}
 
@@ -78,7 +80,7 @@ func run(conf config) error {
 }
 
 func runForTesting(conf config) error {
-	if len(conf.args) < 2 {
+	if len(conf.args) < minArgsLen {
 		return ErrCmd
 	}
 
