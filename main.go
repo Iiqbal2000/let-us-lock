@@ -22,11 +22,13 @@ var (
 const minArgsLen = 2
 
 func main() {
-	err := run(config{
+	application := app{
 		args:   os.Args,
 		input:  os.Stdin,
 		output: os.Stdout,
-	})
+	}
+
+	err := application.run()
 	if err != nil {
 		io.WriteString(os.Stdout, err.Error())
 		io.WriteString(os.Stdout, "\n")
@@ -36,14 +38,14 @@ func main() {
 
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
-type config struct {
+type app struct {
 	args   []string
 	input  io.ReadWriter
 	output io.ReadWriter
 }
 
-func run(conf config) error {
-	if len(conf.args) < minArgsLen {
+func (ap app) run() error {
+	if len(ap.args) < minArgsLen {
 		return ErrCmd
 	}
 
@@ -52,19 +54,17 @@ func run(conf config) error {
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-	// get a command
-	cmd, err := commands.GetCommand(conf.args[1])
+	cmd, err := commands.GetCommand(ap.args[1])
 	if err != nil {
 		return err
 	}
 
-	err = cmd.Validate(conf.args)
+	err = cmd.Validate(ap.args)
 	if err != nil {
 		return err
 	}
 
-	// get a passphrase
-	io.WriteString(conf.output, "Enter your password (min 8 characters and max 64 characters): ")
+	io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
 
 	passphrase, err := catchPassphrase(term.ReadPassword(int(syscall.Stdin)))
 	if err != nil {
@@ -79,8 +79,8 @@ func run(conf config) error {
 	return nil
 }
 
-func runForTesting(conf config) error {
-	if len(conf.args) < minArgsLen {
+func (ap app) runForTesting() error {
+	if len(ap.args) < minArgsLen {
 		return ErrCmd
 	}
 
@@ -89,21 +89,19 @@ func runForTesting(conf config) error {
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-	// get a command
-	cmd, err := commands.GetCommand(conf.args[1])
+	cmd, err := commands.GetCommand(ap.args[1])
 	if err != nil {
 		return err
 	}
 
-	err = cmd.Validate(conf.args)
+	err = cmd.Validate(ap.args)
 	if err != nil {
 		return err
 	}
 
-	// get a passphrase
-	io.WriteString(conf.output, "Enter your password (min 8 characters and max 64 characters): ")
+	io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
 
-	passphrase, err := catchPassphrase(io.ReadAll(conf.input))
+	passphrase, err := catchPassphrase(io.ReadAll(ap.input))
 	if err != nil {
 		return err
 	}

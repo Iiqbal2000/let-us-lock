@@ -42,11 +42,13 @@ func TestEncrypt(t *testing.T) {
 	r := bytes.NewBuffer(keytest)
 	w := bytes.NewBuffer([]byte{})
 
-	err := runForTesting(config{
+	application := app{
 		args:   cmd,
 		input:  r,
 		output: w,
-	})
+	}
+	err := application.runForTesting()
+
 	is.NoErr(err)
 	is.Equal(isFileExist(wantOutputFile), true)
 	is.Equal(isFileExist(wantSaltFile), true)
@@ -58,11 +60,13 @@ func TestDecrypt(t *testing.T) {
 	r := bytes.NewBuffer(keytest)
 	w := bytes.NewBuffer([]byte{})
 
-	err := runForTesting(config{
+	application := app{
 		args:   encryptCmd,
 		input:  r,
 		output: w,
-	})
+	}
+
+	err := application.runForTesting()
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -73,11 +77,13 @@ func TestDecrypt(t *testing.T) {
 
 	is := is.New(t)
 
-	err = runForTesting(config{
+	application = app{
 		args:   cmd,
 		input:  bytes.NewBuffer(keytest),
 		output: w,
-	})
+	}
+
+	err = application.runForTesting()
 	is.NoErr(err)
 	is.Equal(isFileExist(wantOutputFile), true)
 	is.Equal(isFileExist(wantSaltFile), true)
@@ -122,11 +128,13 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 			r := bytes.NewBuffer(keytest)
 			w := bytes.NewBuffer([]byte{})
 
-			err := runForTesting(config{
+			application := app{
 				args:   elem.cmd,
 				input:  r,
 				output: w,
-			})
+			}
+
+			err := application.runForTesting()
 
 			is := is.New(t)
 			is.True(err != nil)
