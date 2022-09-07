@@ -19,7 +19,7 @@ var (
 	saltLen         int = 50 // salt length
 )
 
-// key contains a passphrase.
+// key contains a passphrase that hashed.
 type key []byte
 
 // derive derives a key from passphrase using scrypt kdf.
