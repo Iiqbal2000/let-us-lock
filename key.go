@@ -85,10 +85,6 @@ func (k *key) derive() error {
 	return nil
 }
 
-func (k key) hash() []byte {
-	return k.hashResult
-}
-
 func (k key) getSalt() ([]byte, error) {
 	cfgDirPath := checkCfgDir(getCfgPath())
 
@@ -118,4 +114,8 @@ func (k key) generateSalt(size int) []byte {
 	rand.Read(salt)
 
 	return salt
+}
+
+func (k key) HashResult() []byte {
+	return k.hashResult
 }

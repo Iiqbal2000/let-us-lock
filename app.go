@@ -49,7 +49,7 @@ func (ap app) run() error {
 		return err
 	}
 
-	err = cmd.Execute(key.hash())
+	err = cmd.Execute(key.HashResult())
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (ap app) runForTesting() error {
 		return err
 	}
 
-	err = cmd.Execute(passphrase.hash())
+	err = cmd.Execute(passphrase.HashResult())
 	if err != nil {
 		return err
 	}
