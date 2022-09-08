@@ -25,11 +25,73 @@ type key struct {
 	hashResult []byte
 }
 
-// derive derives a key from passphrase using scrypt kdf.
-func (k key) derive() ([]byte, error) {
-	// remove delimiter from the string.
-	passphrase := bytes.TrimSuffix(k, []byte("\n"))
+const (
+	minPassphraseLength = 8
+	maxPassphraseLength = 64
+)
 
+func catchPassphrase(passphraseIn []byte, err error) (*key, error) {
+	if err != nil {
+		return &key{}, ErrPassNotFound
+	}
+
+	passphrase := &key{
+		passphrase: passphraseIn,
+	}
+
+	passphrase, err = passphrase.clean().validate()
+	if err != nil {
+		return &key{}, err
+	}
+
+	return passphrase, nil
+}
+
+func (k key) validate() (*key, error) {
+	if len(k.passphrase) < minPassphraseLength {
+		return &key{}, ErrPassTooShort
+	} else if len(k.passphrase) > maxPassphraseLength {
+		return &key{}, ErrPassTooLong
+	}
+
+	return &k, nil
+}
+
+func (k key) clean() *key {
+	return &key{
+		passphrase: bytes.TrimSuffix(k.passphrase, []byte("\n")),
+	}
+}
+
+// derive derives a key from passphrase using scrypt kdf.
+func (k *key) derive() error {
+	salt, err := k.getSalt()
+	if err != nil {
+		return err
+	}
+
+	hashResult, err := scrypt.Key(
+		k.passphrase,
+		salt,
+		costFactor,
+		blockSizeFactor,
+		parallelFactor,
+		blockSize,
+	)
+	if err != nil {
+		return ErrPassWrong
+	}
+
+	k.hashResult = hashResult
+
+	return nil
+}
+
+func (k key) hash() []byte {
+	return k.hashResult
+}
+
+func (k key) getSalt() ([]byte, error) {
 	cfgDirPath := checkCfgDir(getCfgPath())
 
 	var salt []byte
@@ -49,11 +111,7 @@ func (k key) derive() ([]byte, error) {
 		}
 	}
 
-	key, err := scrypt.Key([]byte(passphrase), salt, costFactor, blockSizeFactor, parallelFactor, blockSize)
-	if err != nil {
-		return nil, ErrPassWrong
-	}
-	return key, nil
+	return salt, nil
 }
 
 // generateSalt generates random salt.
