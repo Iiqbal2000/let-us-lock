@@ -139,7 +139,6 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 			is := is.New(t)
 			is.True(err != nil)
 			is.True(isFileExist(elem.result) != true)
-			// is.True(isFileExist(elem.result[1]) != true)
 		})
 	}
 }
