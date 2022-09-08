@@ -71,7 +71,12 @@ func (ap app) run() error {
 		return err
 	}
 
-	err = cmd.Execute(key(passphrase))
+	err = passphrase.derive()
+	if err != nil {
+		return err
+	}
+	
+	err = cmd.Execute(passphrase.hash())
 	if err != nil {
 		return err
 	}
@@ -106,7 +111,12 @@ func (ap app) runForTesting() error {
 		return err
 	}
 
-	err = cmd.Execute(key(passphrase))
+	err = passphrase.derive()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Execute(passphrase.hash())
 	if err != nil {
 		return err
 	}

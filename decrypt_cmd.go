@@ -41,16 +41,11 @@ func (c *decryptCmd) Validate(args []string) error {
 	return nil
 }
 
-func (c *decryptCmd) Execute(kdf key) error {
+func (c *decryptCmd) Execute(key []byte) error {
 	// read and check file
 	data, err := os.ReadFile(c.inputPath)
 	if err != nil {
 		return ErrFileNotFound
-	}
-
-	key, err := kdf.derive()
-	if err != nil {
-		return err
 	}
 
 	var plaintext []byte

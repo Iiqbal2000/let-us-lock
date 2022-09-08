@@ -94,32 +94,32 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 	var cases = []struct {
 		name string
 		cmd  []string
-		file []string
+		result string
 	}{
 		{
 			name: "test with wrong command",
 			cmd:  []string{"main.go", "ksiwn", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
-			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+			result: "testdata/cipherfile",
 		},
 		{
 			name: "test without flags",
 			cmd:  []string{"main.go", "encrypt"},
-			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+			result: "testdata/cipherfile",
 		},
 		{
-			name: "test without command but flag is exist",
+			name: "test without command but flag exists",
 			cmd:  []string{"main.go", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
-			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+			result: "testdata/cipherfile",
 		},
 		{
 			name: "test without file flag",
 			cmd:  []string{"main.go", "encrypt", "-o", "testdata/cipherfile"},
-			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+			result: "testdata/cipherfile",
 		},
 		{
 			name: "test with two commands at a time",
 			cmd:  []string{"main.go", "encrypt", "decrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
-			file: []string{path.Join(homeDir, cfgFile), "testdata/cipherfile"},
+			result: "testdata/cipherfile",
 		},
 	}
 
@@ -138,8 +138,8 @@ func TestEncryptAndDecryptFailure(t *testing.T) {
 
 			is := is.New(t)
 			is.True(err != nil)
-			is.True(isFileExist(elem.file[0]) != true)
-			is.True(isFileExist(elem.file[1]) != true)
+			is.True(isFileExist(elem.result) != true)
+			// is.True(isFileExist(elem.result[1]) != true)
 		})
 	}
 }

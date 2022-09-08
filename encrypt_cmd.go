@@ -41,16 +41,11 @@ func (c *encryptCmd) Validate(args []string) error {
 	return nil
 }
 
-func (c *encryptCmd) Execute(k key) error {
+func (c *encryptCmd) Execute(key []byte) error {
 	// read and check file
 	data, err := os.ReadFile(c.inputPath)
 	if err != nil {
 		return ErrFileNotFound
-	}
-
-	key, err := k.derive()
-	if err != nil {
-		return err
 	}
 
 	var chipertext []byte

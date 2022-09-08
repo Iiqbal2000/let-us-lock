@@ -6,7 +6,7 @@ import (
 )
 
 type CliCommand interface {
-	Execute(kdf key) error
+	Execute(key []byte) error
 	Name() string
 	Validate(args []string) error
 }
