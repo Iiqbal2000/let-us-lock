@@ -20,7 +20,10 @@ var (
 )
 
 // key contains a passphrase that hashed.
-type key []byte
+type key struct {
+	passphrase []byte
+	hashResult []byte
+}
 
 // derive derives a key from passphrase using scrypt kdf.
 func (k key) derive() ([]byte, error) {
