@@ -86,13 +86,14 @@ func (k *key) derive() error {
 }
 
 func (k key) getSalt() ([]byte, error) {
-	cfgDirPath := checkCfgDir(getCfgPath())
+	cfgDirPath := hasCfgDir(getCfgPath())
 
 	var salt []byte
 
 	filePath := path.Join(cfgDirPath, cfgFile)
 
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
 		salt = k.generateSalt(saltLen)
 		if err = os.WriteFile(filePath, salt, 0644); err != nil {
 			return nil, err
@@ -107,6 +108,10 @@ func (k key) getSalt() ([]byte, error) {
 
 	return salt, nil
 }
+
+// func (k key) readExistingSalt() {
+
+// }
 
 // generateSalt generates random salt.
 func (k key) generateSalt(size int) []byte {

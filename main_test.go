@@ -32,65 +32,54 @@ func deleteFiles(cfgPath string, ouputFile ...string) {
 	}
 }
 
-func TestEncrypt(t *testing.T) {
-	cmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
-	wantOutputFile := "testdata/cipherfile"
-	wantSaltFile := path.Join(homeDir, cfgFile)
+func TestEncryptDecrypt(t *testing.T) {
+	t.Cleanup(func() {
+		deleteFiles(homeDir, "testdata/result.png", "testdata/cipherfile")
+	})
 
-	is := is.New(t)
+	t.Run("Encrypt", func(t *testing.T) {
+		cmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
+		wantOutputFile := "testdata/cipherfile"
+		wantSaltFile := path.Join(homeDir, cfgFile)
+	
+		is := is.New(t)
+	
+		r := bytes.NewBuffer(keytest)
+		w := bytes.NewBuffer([]byte{})
+	
+		application := app{
+			args:   cmd,
+			input:  r,
+			output: w,
+		}
+		err := application.runForTesting()
+	
+		is.NoErr(err)
+		is.Equal(isFileExist(wantOutputFile), true)
+		is.Equal(isFileExist(wantSaltFile), true)
+	})
 
-	r := bytes.NewBuffer(keytest)
-	w := bytes.NewBuffer([]byte{})
-
-	application := app{
-		args:   cmd,
-		input:  r,
-		output: w,
-	}
-	err := application.runForTesting()
-
-	is.NoErr(err)
-	is.Equal(isFileExist(wantOutputFile), true)
-	is.Equal(isFileExist(wantSaltFile), true)
-	deleteFiles(homeDir, wantOutputFile)
+	t.Run("Decrypt", func(t *testing.T) {
+		cmd := []string{"main.go", "decrypt", "-f", "testdata/cipherfile", "-o", "testdata/result.png"}
+		wantOutputFile := "testdata/result.png"
+		wantSaltFile := path.Join(homeDir, cfgFile)
+	
+		is := is.New(t)
+	
+		application := app{
+			args:   cmd,
+			input:  bytes.NewBuffer(keytest),
+			output: bytes.NewBuffer([]byte{}),
+		}
+	
+		err := application.runForTesting()
+		is.NoErr(err)
+		is.Equal(isFileExist(wantOutputFile), true)
+		is.Equal(isFileExist(wantSaltFile), true)
+	})
 }
 
-func TestDecrypt(t *testing.T) {
-	encryptCmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
-	r := bytes.NewBuffer(keytest)
-	w := bytes.NewBuffer([]byte{})
-
-	application := app{
-		args:   encryptCmd,
-		input:  r,
-		output: w,
-	}
-
-	err := application.runForTesting()
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-
-	cmd := []string{"main.go", "decrypt", "-f", "testdata/cipherfile", "-o", "testdata/result.png"}
-	wantOutputFile := "testdata/result.png"
-	wantSaltFile := path.Join(homeDir, cfgFile)
-
-	is := is.New(t)
-
-	application = app{
-		args:   cmd,
-		input:  bytes.NewBuffer(keytest),
-		output: w,
-	}
-
-	err = application.runForTesting()
-	is.NoErr(err)
-	is.Equal(isFileExist(wantOutputFile), true)
-	is.Equal(isFileExist(wantSaltFile), true)
-	deleteFiles(homeDir, wantOutputFile, "testdata/cipherfile")
-}
-
-func TestEncryptAndDecryptFailure(t *testing.T) {
+func TestEncryptDecryptFailure(t *testing.T) {
 	var cases = []struct {
 		name string
 		cmd  []string
