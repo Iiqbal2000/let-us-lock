@@ -39,7 +39,7 @@ func (ap app) run() error {
 
 	io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
 
-	key, err := catchPassphrase(term.ReadPassword(int(syscall.Stdin)))
+	key, err := createKey(term.ReadPassword(int(syscall.Stdin)))
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (ap app) runForTesting() error {
 
 	io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
 
-	passphrase, err := catchPassphrase(io.ReadAll(ap.input))
+	passphrase, err := createKey(io.ReadAll(ap.input))
 	if err != nil {
 		return err
 	}

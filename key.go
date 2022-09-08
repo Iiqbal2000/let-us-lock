@@ -19,7 +19,6 @@ var (
 	saltLen         int = 50 // salt length
 )
 
-// key contains a passphrase that hashed.
 type key struct {
 	passphrase []byte
 	hashResult []byte
@@ -30,7 +29,7 @@ const (
 	maxPassphraseLength = 64
 )
 
-func catchPassphrase(passphraseIn []byte, err error) (*key, error) {
+func createKey(passphraseIn []byte, err error) (*key, error) {
 	if err != nil {
 		return &key{}, ErrPassNotFound
 	}
@@ -63,7 +62,6 @@ func (k key) clean() *key {
 	}
 }
 
-// derive derives a key from passphrase using scrypt kdf.
 func (k *key) derive() error {
 	salt, err := k.getSalt()
 	if err != nil {
