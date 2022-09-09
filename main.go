@@ -14,6 +14,7 @@ func main() {
 
 	err := application.run()
 	if err != nil {
+		io.WriteString(os.Stdout, "\n")
 		io.WriteString(os.Stdout, err.Error())
 		io.WriteString(os.Stdout, "\n")
 		os.Exit(1)
