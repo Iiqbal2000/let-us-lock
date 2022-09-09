@@ -8,6 +8,7 @@ import (
 )
 
 const minArgsLen = 2
+const msgForAskingPassphrase = "Enter your password (min 8 characters and max 64 characters): "
 
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
@@ -37,7 +38,7 @@ func (ap app) run() error {
 		return err
 	}
 
-	_, err = io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
+	_, err = io.WriteString(ap.output, msgForAskingPassphrase)
 	if err != nil {
 		return err
 	}
@@ -75,7 +76,7 @@ func (ap app) runForTesting() error {
 		return err
 	}
 
-	_, err = io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
+	_, err = io.WriteString(ap.output, msgForAskingPassphrase)
 	if err != nil {
 		return err
 	}
@@ -84,7 +85,7 @@ func (ap app) runForTesting() error {
 	if err != nil {
 		return err
 	}
-	
+
 	err = cmd.Execute(passphrase.HashResult())
 	if err != nil {
 		return err
