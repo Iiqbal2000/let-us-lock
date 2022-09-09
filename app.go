@@ -37,7 +37,10 @@ func (ap app) run() error {
 		return err
 	}
 
-	io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
+	_, err = io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
+	if err != nil {
+		return err
+	}
 
 	key, err := createKey(term.ReadPassword(int(syscall.Stdin)))
 	if err != nil {
@@ -77,7 +80,10 @@ func (ap app) runForTesting() error {
 		return err
 	}
 
-	io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
+	_, err = io.WriteString(ap.output, "Enter your password (min 8 characters and max 64 characters): ")
+	if err != nil {
+		return err
+	}
 
 	passphrase, err := createKey(io.ReadAll(ap.input))
 	if err != nil {
