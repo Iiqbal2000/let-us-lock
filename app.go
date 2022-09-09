@@ -47,11 +47,6 @@ func (ap app) run() error {
 		return err
 	}
 
-	err = key.derive()
-	if err != nil {
-		return err
-	}
-
 	err = cmd.Execute(key.HashResult())
 	if err != nil {
 		return err
@@ -89,12 +84,7 @@ func (ap app) runForTesting() error {
 	if err != nil {
 		return err
 	}
-
-	err = passphrase.derive()
-	if err != nil {
-		return err
-	}
-
+	
 	err = cmd.Execute(passphrase.HashResult())
 	if err != nil {
 		return err

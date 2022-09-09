@@ -33,16 +33,18 @@ func createKey(passphraseIn []byte, err error) (*key, error) {
 		return &key{}, ErrPassNotFound
 	}
 
-	passphrase := &key{
+	k := &key{
 		passphrase: passphraseIn,
 	}
 
-	passphrase, err = passphrase.clean().validate()
+	k, err = k.clean().validate()
 	if err != nil {
 		return &key{}, err
 	}
 
-	return passphrase, nil
+	k.derive()
+
+	return k, nil
 }
 
 func (k key) validate() (*key, error) {
