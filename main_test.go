@@ -20,13 +20,14 @@ func isFileExist(filename string) bool {
 	return true
 }
 
-func deleteFiles(cfgDir string, fileNames ...string) {
+func deleteFiles(fileNames ...string) {
 	if err := os.RemoveAll(cfgDir); err != nil {
 		log.Fatal(err)
 	}
 
 	for _, f := range fileNames {
-		if err := os.Remove(f); err != nil {
+		err := os.Remove(f)
+		if err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -34,7 +35,7 @@ func deleteFiles(cfgDir string, fileNames ...string) {
 
 func TestEncryptDecrypt(t *testing.T) {
 	t.Cleanup(func() {
-		deleteFiles(cfgDir, "testdata/result.png", "testdata/cipherfile")
+		deleteFiles("testdata/result.png", "testdata/cipherfile")
 	})
 
 	t.Run("Encrypt", func(t *testing.T) {
@@ -83,7 +84,7 @@ func TestEncryptDecrypt(t *testing.T) {
 
 func TestEncryptDecryptFailure(t *testing.T) {
 	t.Cleanup(func() {
-		deleteFiles(cfgDir)
+		deleteFiles()
 	})
 
 	var cases = []struct {

@@ -11,7 +11,6 @@ const (
 	saltFileName  string = "salt.txt"
 )
 
-// getHomeDir constructs a path of the config dir from user home dir.
 func getHomeDir() string {
 	usrDir, err := os.UserHomeDir()
 	if err != nil {
