@@ -10,8 +10,8 @@ import (
 	"github.com/matryer/is"
 )
 
-var keytest = []byte("passphrasetesti\n")
-var homeDir = getCfgPath()
+var passphraseTest = []byte("passphrasetesti\n")
+var cfgDir = path.Join(getHomeDir(), cfgDirDefault)
 
 func isFileExist(filename string) bool {
 	if _, err := os.Stat(filename); err != nil {
@@ -20,12 +20,12 @@ func isFileExist(filename string) bool {
 	return true
 }
 
-func deleteFiles(cfgPath string, ouputFile ...string) {
-	if err := os.RemoveAll(cfgPath); err != nil {
+func deleteFiles(cfgDir string, fileNames ...string) {
+	if err := os.RemoveAll(cfgDir); err != nil {
 		log.Fatal(err)
 	}
 
-	for _, f := range ouputFile {
+	for _, f := range fileNames {
 		if err := os.Remove(f); err != nil {
 			log.Fatal(err)
 		}
@@ -34,27 +34,28 @@ func deleteFiles(cfgPath string, ouputFile ...string) {
 
 func TestEncryptDecrypt(t *testing.T) {
 	t.Cleanup(func() {
-		deleteFiles(homeDir, "testdata/result.png", "testdata/cipherfile")
+		deleteFiles(cfgDir, "testdata/result.png", "testdata/cipherfile")
 	})
 
 	t.Run("Encrypt", func(t *testing.T) {
 		cmd := []string{"main.go", "encrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"}
 		wantOutputFile := "testdata/cipherfile"
-		wantSaltFile := path.Join(homeDir, cfgFile)
-	
+		wantSaltFile := path.Join(cfgDir, saltFileName)
+
 		is := is.New(t)
-	
-		r := bytes.NewBuffer(keytest)
+
+		r := bytes.NewBuffer(passphraseTest)
 		w := bytes.NewBuffer([]byte{})
-	
+
 		application := app{
 			args:   cmd,
 			input:  r,
 			output: w,
 		}
+
 		err := application.runForTesting()
-	
 		is.NoErr(err)
+
 		is.Equal(isFileExist(wantOutputFile), true)
 		is.Equal(isFileExist(wantSaltFile), true)
 	})
@@ -62,59 +63,66 @@ func TestEncryptDecrypt(t *testing.T) {
 	t.Run("Decrypt", func(t *testing.T) {
 		cmd := []string{"main.go", "decrypt", "-f", "testdata/cipherfile", "-o", "testdata/result.png"}
 		wantOutputFile := "testdata/result.png"
-		wantSaltFile := path.Join(homeDir, cfgFile)
-	
+		wantSaltFile := path.Join(cfgDir, saltFileName)
+
 		is := is.New(t)
-	
+
 		application := app{
 			args:   cmd,
-			input:  bytes.NewBuffer(keytest),
+			input:  bytes.NewBuffer(passphraseTest),
 			output: bytes.NewBuffer([]byte{}),
 		}
-	
+
 		err := application.runForTesting()
 		is.NoErr(err)
+
 		is.Equal(isFileExist(wantOutputFile), true)
 		is.Equal(isFileExist(wantSaltFile), true)
 	})
 }
 
 func TestEncryptDecryptFailure(t *testing.T) {
+	t.Cleanup(func() {
+		deleteFiles(cfgDir)
+	})
+
 	var cases = []struct {
-		name string
-		cmd  []string
+		name   string
+		cmd    []string
 		result string
 	}{
 		{
-			name: "test with wrong command",
-			cmd:  []string{"main.go", "ksiwn", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+			name:   "test with wrong command",
+			cmd:    []string{"main.go", "ksiwn", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
 			result: "testdata/cipherfile",
 		},
 		{
-			name: "test without flags",
-			cmd:  []string{"main.go", "encrypt"},
+			name:   "test without flags",
+			cmd:    []string{"main.go", "encrypt"},
 			result: "testdata/cipherfile",
 		},
 		{
-			name: "test without command but flag exists",
-			cmd:  []string{"main.go", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+			name:   "test without command but flag exists",
+			cmd:    []string{"main.go", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
 			result: "testdata/cipherfile",
 		},
 		{
-			name: "test without file flag",
-			cmd:  []string{"main.go", "encrypt", "-o", "testdata/cipherfile"},
+			name:   "test without file flag",
+			cmd:    []string{"main.go", "encrypt", "-o", "testdata/cipherfile"},
 			result: "testdata/cipherfile",
 		},
 		{
-			name: "test with two commands at a time",
-			cmd:  []string{"main.go", "encrypt", "decrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
+			name:   "test with two commands at a time",
+			cmd:    []string{"main.go", "encrypt", "decrypt", "-f", "testdata/kitten.png", "-o", "testdata/cipherfile"},
 			result: "testdata/cipherfile",
 		},
 	}
 
 	for _, elem := range cases {
 		t.Run(elem.name, func(t *testing.T) {
-			r := bytes.NewBuffer(keytest)
+			is := is.New(t)
+
+			r := bytes.NewBuffer(passphraseTest)
 			w := bytes.NewBuffer([]byte{})
 
 			application := app{
@@ -124,9 +132,8 @@ func TestEncryptDecryptFailure(t *testing.T) {
 			}
 
 			err := application.runForTesting()
-
-			is := is.New(t)
 			is.True(err != nil)
+
 			is.True(isFileExist(elem.result) != true)
 		})
 	}

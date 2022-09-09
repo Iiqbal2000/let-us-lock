@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"os"
-	"path"
 
 	"golang.org/x/crypto/scrypt"
 )
@@ -19,15 +18,15 @@ var (
 	saltLen         int = 50 // salt length
 )
 
-type key struct {
-	passphrase []byte
-	hashResult []byte
-}
-
 const (
 	minPassphraseLength = 8
 	maxPassphraseLength = 64
 )
+
+type key struct {
+	passphrase []byte
+	hashResult []byte
+}
 
 func createKey(passphraseIn []byte, err error) (*key, error) {
 	if err != nil {
@@ -86,21 +85,21 @@ func (k *key) derive() error {
 }
 
 func (k key) getSalt() ([]byte, error) {
-	cfgDirPath := hasCfgDir(getCfgPath())
-
 	var salt []byte
 
-	filePath := path.Join(cfgDirPath, cfgFile)
+	saltFile := findCfgDir(getHomeDir())
 
-	_, err := os.Stat(filePath)
+	_, err := os.Stat(saltFile)
 	if os.IsNotExist(err) {
 		salt = k.generateSalt(saltLen)
-		if err = os.WriteFile(filePath, salt, 0644); err != nil {
+
+		err = os.WriteFile(saltFile, salt, 0644)
+		if err != nil {
 			return nil, err
 		}
 
 	} else {
-		salt, err = os.ReadFile(filePath)
+		salt, err = os.ReadFile(saltFile)
 		if err != nil {
 			return nil, ErrSaltNotFound
 		}
@@ -109,11 +108,6 @@ func (k key) getSalt() ([]byte, error) {
 	return salt, nil
 }
 
-// func (k key) readExistingSalt() {
-
-// }
-
-// generateSalt generates random salt.
 func (k key) generateSalt(size int) []byte {
 	salt := make([]byte, size)
 	rand.Read(salt)
