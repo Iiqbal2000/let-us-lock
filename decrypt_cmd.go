@@ -38,6 +38,15 @@ func (c *decryptCmd) Validate(args []string) error {
 	if err := c.flagSet.Parse(args[2:]); err != nil {
 		return err
 	}
+
+	_, err := os.Stat(c.inputPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ErrFileNotFound
+		}
+		return err
+	}
+	
 	return nil
 }
 
