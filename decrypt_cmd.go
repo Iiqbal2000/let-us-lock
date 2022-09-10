@@ -21,6 +21,7 @@ func newDecryptCmd(decryptH cryptHandler) *decryptCmd {
 
 	decryptcmd.flagSet.StringVar(&decryptcmd.inputPath, "f", "encrypt-result", "your file path which you want to decrypt")
 	decryptcmd.flagSet.StringVar(&decryptcmd.outputPath, "o", "decrypt-result", "your file output name")
+	
 	decryptcmd.flagSet.Usage = func() {
 		fmt.Fprintln(os.Stderr, "USAGE:")
 		fmt.Fprintln(os.Stderr, "   decrypt -f [your file] -o [your new file]")
@@ -31,6 +32,7 @@ func newDecryptCmd(decryptH cryptHandler) *decryptCmd {
 		fmt.Fprintln(os.Stderr, "OPTIONS:")
 		decryptcmd.flagSet.PrintDefaults()
 	}
+
 	return decryptcmd
 }
 
@@ -51,16 +53,14 @@ func (c *decryptCmd) Validate(args []string) error {
 }
 
 func (c *decryptCmd) Execute(key []byte) error {
-	// read and check file
 	data, err := os.ReadFile(c.inputPath)
 	if err != nil {
 		return ErrFileNotFound
 	}
 
-	var plaintext []byte
-	plaintext, err = c.decrypt(data, key)
+	plaintext, err := c.decrypt(data, key)
 	if err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 
 	if err = os.WriteFile(c.outputPath, plaintext, 0644); err != nil {

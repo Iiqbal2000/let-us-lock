@@ -21,6 +21,7 @@ func newEncryptCmd(encryptH cryptHandler) *encryptCmd {
 
 	encryptcmd.flagSet.StringVar(&encryptcmd.inputPath, "f", "file", "your file path which you want to encrypt")
 	encryptcmd.flagSet.StringVar(&encryptcmd.outputPath, "o", "encrypt-result", "your file output name")
+	
 	encryptcmd.flagSet.Usage = func() {
 		fmt.Fprintln(os.Stderr, "USAGE:")
 		fmt.Fprintln(os.Stderr, "   encrypt -f [your file] -o [your new file]")
@@ -31,6 +32,7 @@ func newEncryptCmd(encryptH cryptHandler) *encryptCmd {
 		fmt.Fprintln(os.Stderr, "OPTIONS:")
 		encryptcmd.flagSet.PrintDefaults()
 	}
+
 	return encryptcmd
 }
 
@@ -51,16 +53,14 @@ func (c *encryptCmd) Validate(args []string) error {
 }
 
 func (c *encryptCmd) Execute(key []byte) error {
-	// read and check file
 	data, err := os.ReadFile(c.inputPath)
 	if err != nil {
 		return ErrFileNotFound
 	}
 
-	var chipertext []byte
-	chipertext, err = c.encrypt(data, key)
+	chipertext, err := c.encrypt(data, key)
 	if err != nil {
-		return fmt.Errorf(err.Error())
+		return err
 	}
 
 	if err = os.WriteFile(c.outputPath, chipertext, 0644); err != nil {

@@ -5,16 +5,16 @@ import (
 	"strings"
 )
 
-type CliCommand interface {
+type Command interface {
 	Execute(key []byte) error
 	Name() string
 	Validate(args []string) error
 }
 
-type CliCommands []CliCommand
+type Commands []Command
 
-func (commands CliCommands) GetCommand(cmdIn string) (CliCommand, error) {
-	for _, command := range commands {
+func (cmds Commands) Register(cmdIn string) (Command, error) {
+	for _, command := range cmds {
 		if strings.EqualFold(command.Name(), cmdIn) {
 			return command, nil
 		}

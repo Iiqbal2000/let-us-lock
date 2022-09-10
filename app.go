@@ -23,12 +23,12 @@ func (ap app) run() error {
 		return ErrCmd
 	}
 
-	commands := CliCommands{
+	commands := Commands{
 		newEncryptCmd(cryptHandler(Encrypt)),
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-	cmd, err := commands.GetCommand(ap.args[1])
+	cmd, err := commands.Register(ap.args[1])
 	if err != nil {
 		return err
 	}
@@ -61,12 +61,12 @@ func (ap app) runForTesting() error {
 		return ErrCmd
 	}
 
-	commands := CliCommands{
+	commands := Commands{
 		newEncryptCmd(cryptHandler(Encrypt)),
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-	cmd, err := commands.GetCommand(ap.args[1])
+	cmd, err := commands.Register(ap.args[1])
 	if err != nil {
 		return err
 	}
