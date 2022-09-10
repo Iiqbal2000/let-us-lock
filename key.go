@@ -42,7 +42,10 @@ func createKey(passphraseIn []byte, err error) (*key, error) {
 		return &key{}, err
 	}
 
-	k.derive()
+	err = k.derive()
+	if err != nil {
+		return &key{}, err
+	}
 
 	return k, nil
 }
