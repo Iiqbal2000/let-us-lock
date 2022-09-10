@@ -7,8 +7,10 @@ import (
 	"golang.org/x/term"
 )
 
-const minArgsLen = 2
-const msgForAskingPassphrase = "Enter your password (min 8 characters and max 64 characters): "
+const (
+	minArgsLen             = 2
+	msgForAskingPassphrase = "Enter your password (min 8 characters and max 64 characters): "
+)
 
 type cryptHandler func(plainData, key []byte) ([]byte, error)
 
