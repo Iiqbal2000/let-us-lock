@@ -45,7 +45,12 @@ func (ap app) run() error {
 		return err
 	}
 
-	key, err := createKey(term.ReadPassword(int(syscall.Stdin)))
+	passphraseInput, err := term.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		return ErrPassNotFound
+	}
+
+	key, err := createKey(passphraseInput)
 	if err != nil {
 		return err
 	}
@@ -83,7 +88,12 @@ func (ap app) runForTesting() error {
 		return err
 	}
 
-	passphrase, err := createKey(io.ReadAll(ap.input))
+	passphraseInput, err := io.ReadAll(ap.input)
+	if err != nil {
+		return ErrPassNotFound
+	}
+
+	passphrase, err := createKey(passphraseInput)
 	if err != nil {
 		return err
 	}

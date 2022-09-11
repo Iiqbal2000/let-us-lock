@@ -28,16 +28,12 @@ type key struct {
 	hashResult []byte
 }
 
-func createKey(passphraseIn []byte, err error) (*key, error) {
-	if err != nil {
-		return &key{}, ErrPassNotFound
-	}
-
+func createKey(passphraseIn []byte) (*key, error) {
 	k := &key{
 		passphrase: passphraseIn,
 	}
 
-	k, err = k.clean().validate()
+	k, err := k.clean().validate()
 	if err != nil {
 		return &key{}, err
 	}
