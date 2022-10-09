@@ -30,7 +30,8 @@ func (ap app) run() error {
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-	cmd, err := commands.Register(ap.args[1])
+	cmdInput := ap.args[1]
+	cmd, err := commands.Get(cmdInput)
 	if err != nil {
 		return err
 	}
@@ -73,7 +74,8 @@ func (ap app) runForTesting() error {
 		newDecryptCmd(cryptHandler(Decrypt)),
 	}
 
-	cmd, err := commands.Register(ap.args[1])
+	cmdInput := ap.args[1]
+	cmd, err := commands.Get(cmdInput)
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,7 @@ type Command interface {
 
 type Commands []Command
 
-func (cmds Commands) Register(cmdIn string) (Command, error) {
+func (cmds Commands) Get(cmdIn string) (Command, error) {
 	for _, command := range cmds {
 		if strings.EqualFold(command.Name(), cmdIn) {
 			return command, nil
